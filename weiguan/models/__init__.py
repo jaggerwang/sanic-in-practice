@@ -4,7 +4,7 @@ import aioredis
 from .common import metadata
 from .storage import StorageRegion, FileModel, FileSchema
 from .post import PostType, PostModel, PostSchema, PostLikeModel
-from .user import UserModel, UserSchema
+from .user import UserModel, UserSchema, UserFollowModel
 
 
 async def init_db(config):

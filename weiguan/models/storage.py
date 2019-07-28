@@ -5,6 +5,7 @@ import sqlalchemy as sa
 import sqlalchemy.sql as sasql
 from marshmallow import Schema, fields, post_dump
 
+from ..config import config
 from .common import metadata, LocalDateTime
 
 
@@ -56,7 +57,8 @@ class FileSchema(Schema):
             'large': '',
         }
         if data['region'] == StorageRegion.LOCAL.value:
-            url = os.path.join('/files', data['bucket'], data['path'])
+            url = '{}{}'.format(config['UPLOAD_FILE_URL_BASE'],
+                                os.path.join(data['bucket'], data['path']))
             if data['meta']['type'].startswith('image/'):
                 thumbs = {
                     'small': '{}?process={}'.format(url, 'thumb-small'),

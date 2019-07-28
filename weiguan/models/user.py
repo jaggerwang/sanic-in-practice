@@ -42,3 +42,28 @@ class UserSchema(Schema):
     updatedAt = fields.DateTime(attribute='updated_at')
 
     avatar = fields.Nested('FileSchema')
+
+
+UserFollowModel = sa.Table(
+    'user_follow', metadata,
+    sa.Column("id", sa.Integer, nullable=False, primary_key=True,
+              comment='ID'),
+    sa.Column('following_id', sa.Integer, nullable=False, comment='被关注用户 ID'),
+    sa.Column('follower_id', sa.Integer, nullable=False, comment='粉丝用户 ID'),
+    sa.Column("created_at", LocalDateTime, nullable=False,
+              server_default=sasql.text('CURRENT_TIMESTAMP'),
+              comment='创建时间'),
+    sa.Column("updated_at", LocalDateTime, nullable=False,
+              server_default=sasql.text(
+                  'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+              comment='更新时间'),
+    sa.Index('idx_follower_id_following_id', 'follower_id', 'following_id',
+             unique=True),
+    sa.Index('idx_follower_id_created_at', 'follower_id', 'created_at'),
+    sa.Index('idx_following_id_created_at', 'following_id', 'created_at'),
+    sa.ForeignKeyConstraint(['following_id'], ['user.id'], ondelete='CASCADE',
+                            onupdate='CASCADE'),
+    sa.ForeignKeyConstraint(['follower_id'], ['user.id'], ondelete='CASCADE',
+                            onupdate='CASCADE'),
+    comment='用户关注',
+)

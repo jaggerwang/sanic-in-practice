@@ -3,7 +3,7 @@ import string
 import sqlalchemy.sql as sasql
 
 from ..utils import random_string, sha256_hash
-from ..models import UserModel
+from ..models import UserModel, UserFollowModel
 
 
 class UserService(object):
@@ -136,3 +136,83 @@ class UserService(object):
         del self.email_verify_codes[key]
 
         return True
+
+    async def follow(self, follower_id, following_id):
+        async with self.db.acquire() as conn:
+            await conn.execute(
+                sasql.insert(UserFollowModel).
+                values(follower_id=follower_id, following_id=following_id))
+
+    async def unfollow(self, follower_id, following_id):
+        async with self.db.acquire() as conn:
+            await conn.execute(
+                sasql.delete(UserFollowModel).
+                where(sasql.and_(
+                    UserFollowModel.c.follower_id == follower_id,
+                    UserFollowModel.c.following_id == following_id)))
+
+    async def followings(self, user_id, limit=None, offset=None,
+                         before_id=None, after_id=None):
+        where_clause = UserFollowModel.c.follower_id == user_id
+        select_sm = sasql.select([UserModel]).\
+            select_from(UserModel.join(
+                UserFollowModel,
+                UserFollowModel.c.following_id == UserModel.c.id)).\
+            where(where_clause)
+        count_sm = sasql.select([sasql.func.count()]).\
+            select_from(UserFollowModel).\
+            where(where_clause)
+
+        select_sm = select_sm.order_by(UserModel.c.id.desc())
+
+        if limit is not None:
+            select_sm = select_sm.limit(limit)
+        if offset is not None:
+            select_sm = select_sm.offset(offset)
+
+        if before_id is not None:
+            select_sm = select_sm.where(UserModel.c.id < before_id)
+        if after_id is not None:
+            select_sm = select_sm.where(UserModel.c.id > after_id)
+
+        async with self.db.acquire() as conn:
+            result = await conn.execute(select_sm)
+            rows = [dict(v) for v in await result.fetchall()]
+
+            result = await conn.execute(count_sm)
+            total = await result.scalar()
+
+        return (rows, total)
+
+    async def followers(self, user_id, limit=None, offset=None,
+                        before_id=None, after_id=None):
+        where_clause = UserFollowModel.c.following_id == user_id
+        select_sm = sasql.select([UserModel]).\
+            select_from(UserModel.join(
+                UserFollowModel,
+                UserFollowModel.c.follower_id == UserModel.c.id)).\
+            where(where_clause)
+        count_sm = sasql.select([sasql.func.count()]).\
+            select_from(UserFollowModel).\
+            where(where_clause)
+
+        select_sm = select_sm.order_by(UserModel.c.id.desc())
+
+        if limit is not None:
+            select_sm = select_sm.limit(limit)
+        if offset is not None:
+            select_sm = select_sm.offset(offset)
+
+        if before_id is not None:
+            select_sm = select_sm.where(UserModel.c.id < before_id)
+        if after_id is not None:
+            select_sm = select_sm.where(UserModel.c.id > after_id)
+
+        async with self.db.acquire() as conn:
+            result = await conn.execute(select_sm)
+            rows = [dict(v) for v in await result.fetchall()]
+
+            result = await conn.execute(count_sm)
+            total = await result.scalar()
+
+        return (rows, total)

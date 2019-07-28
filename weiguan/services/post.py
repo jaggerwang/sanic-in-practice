@@ -2,7 +2,7 @@ import string
 
 import sqlalchemy.sql as sasql
 
-from ..models import PostType, PostModel, PostLikeModel
+from ..models import PostType, PostModel, PostLikeModel, UserFollowModel
 from .common import ServiceException
 
 
@@ -114,6 +114,40 @@ class PostService(object):
             select_sm = select_sm.where(PostLikeModel.c.id < before_id)
         if after_id is not None:
             select_sm = select_sm.where(PostLikeModel.c.id > after_id)
+
+        async with self.db.acquire() as conn:
+            result = await conn.execute(select_sm)
+            rows = [dict(v) for v in await result.fetchall()]
+
+            result = await conn.execute(count_sm)
+            total = await result.scalar()
+
+        return (rows, total)
+
+    async def following(self, user_id, limit=None, offset=None,
+                        before_id=None, after_id=None):
+        from_clause = PostModel.join(
+            UserFollowModel,
+            PostModel.c.user_id == UserFollowModel.c.following_id)
+        where_clause = UserFollowModel.c.follower_id == user_id
+        select_sm = sasql.select([PostModel]).\
+            select_from(from_clause).\
+            where(where_clause)
+        count_sm = sasql.select([sasql.func.count()]).\
+            select_from(from_clause).\
+            where(where_clause)
+
+        select_sm = select_sm.order_by(PostModel.c.id.desc())
+
+        if limit is not None:
+            select_sm = select_sm.limit(limit)
+        if offset is not None:
+            select_sm = select_sm.offset(offset)
+
+        if before_id is not None:
+            select_sm = select_sm.where(PostModel.c.id < before_id)
+        if after_id is not None:
+            select_sm = select_sm.where(PostModel.c.id > after_id)
 
         async with self.db.acquire() as conn:
             result = await conn.execute(select_sm)
