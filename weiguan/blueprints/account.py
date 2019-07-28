@@ -3,7 +3,7 @@ from sanic import Blueprint
 from ..utils import sha256_hash
 from ..models import UserSchema
 from ..services import UserService
-from .common import response_json, ResponseCode, authenticated
+from .common import response_json, ResponseCode, authenticated, dump_user_info
 
 account = Blueprint('account', url_prefix='/account')
 
@@ -18,7 +18,7 @@ async def register(request):
         request.app.config, request.app.db, request.app.cache)
     user = await user_service.create(username=username, password=password)
 
-    return response_json(user=UserSchema().dump(user))
+    return response_json(user=await dump_user_info(request, user))
 
 
 @account.post('/login')
@@ -39,7 +39,7 @@ async def login(request):
 
     if (user is not None and
             sha256_hash(password, user['salt']) == user['password']):
-        request['session']['user'] = UserSchema().dump(user)
+        request['session']['user'] = await dump_user_info(request, user)
 
         return response_json(user=request['session']['user'])
     else:
@@ -87,7 +87,7 @@ async def edit(request):
         user_id, username=username, password=password, mobile=mobile,
         email=email, avatar_id=avatar_id, intro=intro)
 
-    request['session']['user'] = UserSchema().dump(user)
+    request['session']['user'] = await dump_user_info(request, user)
 
     return response_json(user=request['session']['user'])
 

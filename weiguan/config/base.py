@@ -1,6 +1,8 @@
 NAME = 'weiguan'
-# 日志文件存放路径
+# 运行时数据保存路径，比如日志、上传文件等
 DATA_PATH = '/tmp'
+# 上传文件子目录
+UPLOAD_DIR = 'uploads'
 # 服务监听地址和端口
 HOST = '0.0.0.0'
 PORT = 8000
@@ -14,6 +16,12 @@ ACCESS_LOG = True
 WORKERS = 1
 # 会话有效期
 SESSION_EXPIRY = 30 * 24 * 3600
+# 请求体大小限制
+REQUEST_MAX_SIZE = 100 * 1024 * 1024
+# 上传文件大小限制
+UPLOAD_FILE_MAX_SIZE = 50 * 1024 * 1024
+# 上传文件访问域名
+UPLOAD_FILE_URL_BASE = 'http://localhost:8000/files/'
 
 # MySQL连接信息
 MYSQL_HOST = 'localhost'

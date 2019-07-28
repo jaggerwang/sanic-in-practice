@@ -1,16 +1,22 @@
+import os
+
 from sanic import Sanic
 from sanic_session import Session, AIORedisSessionInterface
 
 from .config import config, log_config
 from .models import init_db, close_db, init_cache, close_cache
-from .blueprints import handle_exception, account
+from .blueprints import handle_exception, account, storage
 
 app = Sanic(config['NAME'].capitalize(), log_config=log_config)
 app.config.update(config)
 
 app.error_handler.add(Exception, handle_exception)
 
+app.static('/files', os.path.join(config['DATA_PATH'], config['UPLOAD_DIR']),
+           stream_large_files=True)
+
 app.blueprint(account)
+app.blueprint(storage)
 
 
 @app.listener('before_server_start')

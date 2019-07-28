@@ -72,7 +72,7 @@ class UserService(object):
                 UserModel.select().where(UserModel.c.id.in_(ids)))
             d = {v['id']: dict(v) for v in await result.fetchall()}
 
-        return [d[v] for v in ids]
+        return [d.get(v) for v in ids]
 
     async def list_(self, *, limit=None, offset=None):
         select_sm = UserModel.select()

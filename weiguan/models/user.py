@@ -25,6 +25,8 @@ UserModel = sa.Table(
               comment='更新时间'),
     sa.Index('idx_username', 'username', unique=True),
     sa.Index('idx_mobile', 'mobile', unique=True),
+    sa.ForeignKeyConstraint(['avatar_id'], ['file.id'], ondelete='SET NULL',
+                            onupdate='CASCADE'),
     comment='用户',
 )
 
@@ -38,3 +40,5 @@ class UserSchema(Schema):
     intro = fields.String()
     createdAt = fields.DateTime(attribute='created_at')
     updatedAt = fields.DateTime(attribute='updated_at')
+
+    avatar = fields.Nested('FileSchema')

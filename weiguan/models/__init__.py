@@ -2,6 +2,7 @@ from aiomysql.sa import create_engine
 import aioredis
 
 from .common import metadata
+from .storage import StorageRegion, FileModel, FileSchema
 from .user import UserModel, UserSchema
 
 

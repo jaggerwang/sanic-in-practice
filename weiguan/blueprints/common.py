@@ -5,7 +5,8 @@ from functools import wraps
 from sanic import response
 from sanic.exceptions import SanicException, Unauthorized
 
-from ..services import ServiceException
+from ..models import UserSchema
+from ..services import ServiceException, StorageService
 
 
 class ResponseCode(Enum):
@@ -50,3 +51,30 @@ def authenticated():
         return decorated_function
 
     return decorator
+
+
+async def dump_user_info(request, user):
+    if user is None:
+        return None
+
+    storage_service = StorageService(
+        request.app.config, request.app.db, request.app.cache)
+    if user['avatar_id'] is not None:
+        user['avatar'] = await storage_service.file_info(user['avatar_id'])
+
+    return UserSchema().dump(user)
+
+
+async def dump_user_infos(request, users):
+    if not users:
+        return []
+
+    storage_service = StorageService(
+        request.app.config, request.app.db, request.app.cache)
+    avatar_users = [v for v in users if v['avatar_id'] is not None]
+    files = await storage_service.file_infos(
+        [v['avatar_id'] for v in avatar_users])
+    for user, file in zip(avatar_users, files):
+        user['avatar'] = file
+
+    return [UserSchema().dump(v) for v in users]
