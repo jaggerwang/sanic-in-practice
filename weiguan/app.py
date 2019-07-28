@@ -5,7 +5,7 @@ from sanic_session import Session, AIORedisSessionInterface
 
 from .config import config, log_config
 from .models import init_db, close_db, init_cache, close_cache
-from .blueprints import handle_exception, account, storage
+from .blueprints import handle_exception, account, post, storage
 
 app = Sanic(config['NAME'].capitalize(), log_config=log_config)
 app.config.update(config)
@@ -16,6 +16,7 @@ app.static('/files', os.path.join(config['DATA_PATH'], config['UPLOAD_DIR']),
            stream_large_files=True)
 
 app.blueprint(account)
+app.blueprint(post)
 app.blueprint(storage)
 
 

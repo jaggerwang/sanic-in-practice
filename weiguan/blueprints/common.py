@@ -5,8 +5,8 @@ from functools import wraps
 from sanic import response
 from sanic.exceptions import SanicException, Unauthorized
 
-from ..models import UserSchema
-from ..services import ServiceException, StorageService
+from ..models import PostSchema, UserSchema
+from ..services import ServiceException, StorageService, UserService
 
 
 class ResponseCode(Enum):
@@ -78,3 +78,52 @@ async def dump_user_infos(request, users):
         user['avatar'] = file
 
     return [UserSchema().dump(v) for v in users]
+
+
+async def dump_post_info(request, post):
+    if post is None:
+        return None
+
+    user_service = UserService(
+        request.app.config, request.app.db, request.app.cache)
+    post['user'] = await user_service.info(post['user_id'])
+
+    storage_service = StorageService(
+        request.app.config, request.app.db, request.app.cache)
+    if post['image_ids'] is not None:
+        post['images'] = await storage_service.file_infos(post['image_ids'])
+
+    if post['video_id'] is not None:
+        post['video'] = await storage_service.file_info(post['video_id'])
+
+    return PostSchema().dump(post)
+
+
+async def dump_post_infos(request, posts):
+    if not posts:
+        return []
+
+    user_service = UserService(
+        request.app.config, request.app.db, request.app.cache)
+    users = await user_service.infos([v['user_id'] for v in posts])
+    for post, user in zip(posts, users):
+        post['user'] = user
+
+    storage_service = StorageService(
+        request.app.config, request.app.db, request.app.cache)
+    image_posts = [v for v in posts if v['image_ids'] is not None]
+    images = await storage_service.file_infos(
+        [image_id for post in image_posts for image_id in post['image_ids']])
+    start = 0
+    for post in image_posts:
+        length = len(post['image_ids'])
+        post['images'] = images[start:start+length]
+        start += length
+
+    video_posts = [v for v in posts if v['video_id'] is not None]
+    files = await storage_service.file_infos(
+        [v['video_id'] for v in video_posts])
+    for post, file in zip(video_posts, files):
+        post['video'] = file
+
+    return [PostSchema().dump(v) for v in posts]
