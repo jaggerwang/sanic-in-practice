@@ -4,8 +4,8 @@ from sanic import Sanic
 from sanic_session import Session, AIORedisSessionInterface
 
 from .config import config, log_config
-from .models import init_db, close_db, init_cache, close_cache
-from .blueprints import handle_exception, account, post, storage, user
+from .models import init_db, close_db, init_cache, close_cache, init_ws
+from .blueprints import handle_exception, account, message, post, storage, user
 
 app = Sanic(config['NAME'].capitalize(), log_config=log_config)
 app.config.update(config)
@@ -16,6 +16,7 @@ app.static('/files', os.path.join(config['DATA_PATH'], config['UPLOAD_DIR']),
            stream_large_files=True)
 
 app.blueprint(account)
+app.blueprint(message)
 app.blueprint(post)
 app.blueprint(storage)
 app.blueprint(user)
@@ -29,6 +30,8 @@ async def server_init(app, loop):
 
     Session(app, AIORedisSessionInterface(
         app.cache, expiry=config['SESSION_EXPIRY']))
+
+    app.ws = await init_ws(config, app.db, app.cache)
 
 
 @app.listener('after_server_stop')
