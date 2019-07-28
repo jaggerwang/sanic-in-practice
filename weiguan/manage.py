@@ -5,7 +5,7 @@ import fire
 
 from .config import config, get_log_config
 from .models import init_db, init_cache
-from .commands import Model
+from .commands import Model, Schedule
 
 
 class Manage(object):
@@ -17,6 +17,7 @@ class Manage(object):
         self.cache = await init_cache(self.config)
 
         self.model = Model(self.config, self.db, self.cache)
+        self.schedule = Schedule(self.config, self.db, self.cache)
 
 
 if __name__ == '__main__':

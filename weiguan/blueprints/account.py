@@ -93,7 +93,6 @@ async def edit(request):
 
 
 @account.post('/send/mobile/verify/code')
-@authenticated()
 async def send_mobile_verify_code(request):
     data = request.json
     type = data['type']

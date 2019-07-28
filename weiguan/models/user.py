@@ -42,6 +42,7 @@ class UserSchema(Schema):
     updatedAt = fields.DateTime(attribute='updated_at')
 
     avatar = fields.Nested('FileSchema')
+    stat = fields.Nested('UserStatSchema')
 
 
 UserFollowModel = sa.Table(
