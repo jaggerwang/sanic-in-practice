@@ -66,8 +66,7 @@ async def dump_user_info(request, user):
 
     storage_service = StorageService(
         request.app.config, request.app.db, request.app.cache)
-    if user['avatar_id'] is not None:
-        user['avatar'] = await storage_service.file_info(user['avatar_id'])
+    user['avatar'] = await storage_service.file_info(user['avatar_id'])
 
     stat_service = StatService(
         request.app.config, request.app.db, request.app.cache)
@@ -82,10 +81,8 @@ async def dump_user_infos(request, users):
 
     storage_service = StorageService(
         request.app.config, request.app.db, request.app.cache)
-    avatar_users = [v for v in users if v['avatar_id'] is not None]
-    files = await storage_service.file_infos(
-        [v['avatar_id'] for v in avatar_users])
-    for user, file in zip(avatar_users, files):
+    files = await storage_service.file_infos([v['avatar_id'] for v in users])
+    for user, file in zip(users, files):
         user['avatar'] = file
 
     stat_service = StatService(
@@ -104,15 +101,18 @@ async def dump_post_info(request, post):
 
     user_service = UserService(
         request.app.config, request.app.db, request.app.cache)
-    post['user'] = await user_service.info(post['user_id'])
+    user = await user_service.info(post['user_id'])
 
     storage_service = StorageService(
         request.app.config, request.app.db, request.app.cache)
-    if post['image_ids'] is not None:
-        post['images'] = await storage_service.file_infos(post['image_ids'])
+    user['avatar'] = await storage_service.file_info(user['avatar_id'])
 
-    if post['video_id'] is not None:
-        post['video'] = await storage_service.file_info(post['video_id'])
+    post['user'] = user
+
+    post['image_ids'] = post['image_ids'] or []
+    post['images'] = await storage_service.file_infos(post['image_ids'])
+
+    post['video'] = await storage_service.file_info(post['video_id'])
 
     stat_service = StatService(
         request.app.config, request.app.db, request.app.cache)
@@ -128,24 +128,28 @@ async def dump_post_infos(request, posts):
     user_service = UserService(
         request.app.config, request.app.db, request.app.cache)
     users = await user_service.infos([v['user_id'] for v in posts])
-    for post, user in zip(posts, users):
-        post['user'] = user
 
     storage_service = StorageService(
         request.app.config, request.app.db, request.app.cache)
-    image_posts = [v for v in posts if v['image_ids'] is not None]
+    files = await storage_service.file_infos([v['avatar_id'] for v in users])
+    for user, file in zip(users, files):
+        user['avatar'] = file
+
+    for post, user in zip(posts, users):
+        post['user'] = user
+
+    for post in posts:
+        post['image_ids'] = post['image_ids'] or []
     images = await storage_service.file_infos(
-        [image_id for post in image_posts for image_id in post['image_ids']])
+        [image_id for post in posts for image_id in post['image_ids']])
     start = 0
-    for post in image_posts:
+    for post in posts:
         length = len(post['image_ids'])
         post['images'] = images[start:start+length]
         start += length
 
-    video_posts = [v for v in posts if v['video_id'] is not None]
-    files = await storage_service.file_infos(
-        [v['video_id'] for v in video_posts])
-    for post, file in zip(video_posts, files):
+    files = await storage_service.file_infos([v['video_id'] for v in posts])
+    for post, file in zip(posts, files):
         post['video'] = file
 
     stat_service = StatService(

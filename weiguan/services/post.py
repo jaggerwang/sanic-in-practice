@@ -30,6 +30,9 @@ class PostService(object):
                 sasql.delete(PostModel).where(PostModel.c.id == id))
 
     async def info(self, id):
+        if id is None:
+            return None
+
         async with self.db.acquire() as conn:
             result = await conn.execute(
                 PostModel.select().where(PostModel.c.id == id))
@@ -38,13 +41,14 @@ class PostService(object):
         return None if row is None else dict(row)
 
     async def infos(self, ids):
-        if not ids:
-            return []
-
-        async with self.db.acquire() as conn:
-            result = await conn.execute(
-                PostModel.select().where(PostModel.c.id.in_(ids)))
-            d = {v['id']: dict(v) for v in await result.fetchall()}
+        valid_ids = [v for v in ids if v is not None]
+        if valid_ids:
+            async with self.db.acquire() as conn:
+                result = await conn.execute(
+                    PostModel.select().where(PostModel.c.id.in_(valid_ids)))
+                d = {v['id']: dict(v) for v in await result.fetchall()}
+        else:
+            d = {}
 
         return [d.get(v) for v in ids]
 

@@ -69,6 +69,9 @@ class StatService(object):
             await self.stat_user(user_id)
 
     async def user_stat_info_by_user_id(self, user_id):
+        if user_id is None:
+            return None
+
         async with self.db.acquire() as conn:
             result = await conn.execute(
                 UserStatModel.select().
@@ -78,11 +81,15 @@ class StatService(object):
         return None if row is None else dict(row)
 
     async def user_stat_infos_by_user_ids(self, user_ids):
-        async with self.db.acquire() as conn:
-            result = await conn.execute(
-                UserStatModel.select().
-                where(UserStatModel.c.user_id.in_(user_ids)))
-            d = {v['user_id']: dict(v) for v in await result.fetchall()}
+        valid_ids = [v for v in user_ids if v is not None]
+        if valid_ids:
+            async with self.db.acquire() as conn:
+                result = await conn.execute(
+                    UserStatModel.select().
+                    where(UserStatModel.c.user_id.in_(valid_ids)))
+                d = {v['user_id']: dict(v) for v in await result.fetchall()}
+        else:
+            d = {}
 
         return [d.get(v) for v in user_ids]
 
@@ -121,6 +128,9 @@ class StatService(object):
             await self.stat_post(post_id)
 
     async def post_stat_info_by_post_id(self, post_id):
+        if post_id is None:
+            return None
+
         async with self.db.acquire() as conn:
             result = await conn.execute(
                 PostStatModel.select().
@@ -130,10 +140,14 @@ class StatService(object):
         return None if row is None else dict(row)
 
     async def post_stat_infos_by_post_ids(self, post_ids):
-        async with self.db.acquire() as conn:
-            result = await conn.execute(
-                PostStatModel.select().
-                where(PostStatModel.c.post_id.in_(post_ids)))
-            d = {v['post_id']: dict(v) for v in await result.fetchall()}
+        valid_ids = [v for v in post_ids if v is not None]
+        if valid_ids:
+            async with self.db.acquire() as conn:
+                result = await conn.execute(
+                    PostStatModel.select().
+                    where(PostStatModel.c.post_id.in_(valid_ids)))
+                d = {v['post_id']: dict(v) for v in await result.fetchall()}
+        else:
+            d = {}
 
         return [d.get(v) for v in post_ids]
