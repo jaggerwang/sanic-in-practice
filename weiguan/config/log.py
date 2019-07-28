@@ -2,8 +2,6 @@ import sys
 
 
 def get_log_config(config):
-    """全局日志配置
-    """
     default_level = 'DEBUG' if config['DEBUG'] else 'INFO'
 
     return {

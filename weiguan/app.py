@@ -3,10 +3,12 @@ from sanic_session import Session, AIORedisSessionInterface
 
 from .config import config, log_config
 from .models import init_db, close_db, init_cache, close_cache
-from .blueprints import account
+from .blueprints import handle_exception, account
 
 app = Sanic(config['NAME'].capitalize(), log_config=log_config)
 app.config.update(config)
+
+app.error_handler.add(Exception, handle_exception)
 
 app.blueprint(account)
 

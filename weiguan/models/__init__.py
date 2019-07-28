@@ -1,6 +1,9 @@
 from aiomysql.sa import create_engine
 import aioredis
 
+from .common import metadata
+from .user import UserModel, UserSchema
+
 
 async def init_db(config):
     db = await create_engine(
