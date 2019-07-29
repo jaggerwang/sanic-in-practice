@@ -1,0 +1,21 @@
+version: '3'
+services:
+  server:
+    build: .
+    command: sleep infinity
+    volumes:
+      - ~/data/weiguan/server:/data
+      - .:/workspace
+      - ~/.ssh:/root/.ssh-localhost:ro
+  scheduler:
+    build: .
+    command: sleep infinity
+    volumes:
+      - ~/data/weiguan/scheduler:/data
+      - .:/workspace
+  mysql:
+    volumes:
+      - ~/data/weiguan/mysql:/var/lib/mysql
+  redis:
+    volumes:
+      - ~/data/weiguan/redis:/data

@@ -15,7 +15,7 @@ async def init_db(config):
         minsize=config['MYSQL_POOL_MIN_SIZE'],
         maxsize=config['MYSQL_POOL_MIN_SIZE'],
         pool_recycle=3600, host=config['MYSQL_HOST'], port=config['MYSQL_PORT'],
-        user=config['MYSQL_USER'], password=config['MYSQL_PASSWORD'],
+        user=config['MYSQL_USER'], password=str(config['MYSQL_PASSWORD']),
         db=config['MYSQL_DB'], echo=config['DEBUG'], charset='utf8mb4',
         connect_timeout=config['MYSQL_TIMEOUT'], autocommit=True)
     return db

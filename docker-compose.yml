@@ -1,0 +1,49 @@
+version: '3'
+services:
+  server:
+    image: weiguan
+    environment:
+      TZ: Asia/Shanghai
+      WG_DATA_PATH: /data
+      WG_DEBUG: 'false'
+      WG_AUTO_RELOAD: 'false'
+      WG_MYSQL_HOST: mysql
+      WG_MYSQL_PORT: 3306
+      WG_MYSQL_DB: weiguan
+      WG_MYSQL_USER: weiguan
+      WG_MYSQL_PASSWORD: jwcourse.com
+      WG_REDIS_URI: redis://@redis:6379/0
+    ports:
+      - "8001:8000"
+    volumes:
+      - /data/weiguan/server:/data
+  scheduler:
+    image: weiguan
+    command: python -u -m weiguan.manage schedule run
+    environment:
+      TZ: Asia/Shanghai
+      WG_DATA_PATH: /data
+      WG_DEBUG: 'false'
+      WG_AUTO_RELOAD: 'false'
+      WG_MYSQL_HOST: mysql
+      WG_MYSQL_PORT: 3306
+      WG_MYSQL_DB: weiguan
+      WG_MYSQL_USER: weiguan
+      WG_MYSQL_PASSWORD: jwcourse.com
+      WG_REDIS_URI: redis://@redis:6379/0
+    volumes:
+      - /data/weiguan/scheduler:/data
+  mysql:
+    image: mysql:5.7
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: jwcourse.com
+    volumes:
+      - /data/weiguan/mysql:/var/lib/mysql
+  redis:
+    image: redis:5
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - /data/weiguan/redis:/data
+    

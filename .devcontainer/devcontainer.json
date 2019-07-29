@@ -1,15 +1,14 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
-	"name": "Python 3",
-	"context": "..",
-	"dockerFile": "Dockerfile",
-
-	// Uncomment the next line if you want to publish any ports.
-	// "appPort": [],
-
-	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "python --version",
-
+	"name": "Weiguan Server",
+	"dockerComposeFile": [
+		"../docker-compose.yml",
+		"../docker-compose.dev.yml"
+	],
+	"service": "server",
+	"workspaceFolder": "/workspace",
+	"shutdownAction": "stopCompose",
+	"postCreateCommand": "mkdir -p ~/.ssh && cp -r ~/.ssh-localhost/* ~/.ssh && chmod 700 ~/.ssh && chmod 600 ~/.ssh/*",
 	"extensions": [
 		"ms-python.python"
 	],
