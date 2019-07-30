@@ -10,7 +10,7 @@ from ..services import StatService
 logger = logging.getLogger('app')
 
 
-class Schedule(object):
+class Schedule:
     def __init__(self, config, db, cache):
         self.config = config
         self.db = db

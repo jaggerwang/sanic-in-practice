@@ -6,7 +6,7 @@ from ..utils import random_string, sha256_hash
 from ..models import UserModel, UserFollowModel
 
 
-class UserService(object):
+class UserService:
     mobile_verify_codes = {}
     email_verify_codes = {}
 

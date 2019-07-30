@@ -5,7 +5,7 @@ import sqlalchemy.sql as sasql
 from ..models import FileModel
 
 
-class StorageService(object):
+class StorageService:
     def __init__(self, config, db, cache):
         self.config = config
         self.db = db

@@ -1,7 +1,8 @@
 from sanic import Blueprint, response
 from sanic.exceptions import NotFound
 
-from ..models import WsMessageLevel, WsMessage, WsMessageSchema
+from ..models import MessageLevel, NormalMessage, NormalMessageSchema
+from ..services import MessageService
 from .common import ResponseCode, response_json
 
 message = Blueprint('message', url_prefix='/message')
@@ -11,18 +12,19 @@ message = Blueprint('message', url_prefix='/message')
 async def ws(request, ws):
     user = request['session'].get('user')
     if user is None:
-        await ws.send(WsMessageSchema().dumps(
-            WsMessage('未登录', level=WsMessageLevel.ERROR.value)))
+        await ws.send(NormalMessageSchema().dumps(
+            NormalMessage('未登录', level=MessageLevel.ERROR.value)))
         return
 
-    request.app.ws.register_ws_user(user['id'], ws)
+    request.app.message_service.register_ws(user['id'], ws)
 
-    await request.app.ws.broadcast_message(
-        WsMessage('Welcome user {}'.format(user['username'])))
+    await request.app.message_service.broadcast_message(
+        NormalMessage('Welcome user {}!'.format(user['username'])))
 
     try:
         async for message in ws:
-            await request.app.ws.send_user_message(
-                user['id'], WsMessage('Message received: {}'.format(message)))
+            await request.app.message_service.send_user_message(
+                user['id'],
+                NormalMessage('Message received: {}'.format(message)))
     finally:
-        request.app.ws.unregister_ws_user(user['id'])
+        request.app.message_service.unregister_ws(user['id'])

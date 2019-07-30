@@ -6,7 +6,7 @@ from ..models import PostType, PostModel, PostLikeModel, UserFollowModel
 from .common import ServiceException
 
 
-class PostService(object):
+class PostService:
     def __init__(self, config, db, cache):
         self.config = config
         self.db = db

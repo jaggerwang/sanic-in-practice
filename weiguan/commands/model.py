@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from ..models import metadata
 
 
-class Model(object):
+class Model:
     def __init__(self, config, db, cache):
         self.config = config
         self.db = db

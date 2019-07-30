@@ -2,8 +2,8 @@ from aiomysql.sa import create_engine
 import aioredis
 
 from .common import metadata
-from .message import WsManager, WsMessageType, WsMessageLevel, WsMessage, \
-    WsMessageSchema
+from .message import MessageType, MessageLevel, NormalMessage, \
+    NormalMessageSchema, NotifyMessage, NotifyMessageSchema
 from .storage import StorageRegion, FileModel, FileSchema
 from .post import PostType, PostModel, PostSchema, PostLikeModel
 from .stat import UserStatModel, UserStatSchema, PostStatModel, PostStatSchema
@@ -37,9 +37,3 @@ async def init_cache(config):
 async def close_cache(cache):
     cache.close()
     await cache.wait_closed()
-
-
-async def init_ws(config, db, cache):
-    ws = WsManager(config, db, cache)
-    await ws.init()
-    return ws

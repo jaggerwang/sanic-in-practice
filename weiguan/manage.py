@@ -8,7 +8,7 @@ from .models import init_db, init_cache
 from .commands import Model, Schedule
 
 
-class Manage(object):
+class Manage:
     def __init__(self, config):
         self.config = config
 

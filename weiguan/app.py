@@ -4,7 +4,8 @@ from sanic import Sanic
 from sanic_session import Session, AIORedisSessionInterface
 
 from .config import config, log_config
-from .models import init_db, close_db, init_cache, close_cache, init_ws
+from .models import init_db, close_db, init_cache, close_cache
+from .services import MessageService
 from .blueprints import handle_exception, account, message, post, storage, user
 
 app = Sanic(config['NAME'].capitalize(), log_config=log_config)
@@ -31,7 +32,8 @@ async def server_init(app, loop):
     Session(app, AIORedisSessionInterface(
         app.cache, expiry=config['SESSION_EXPIRY']))
 
-    app.ws = await init_ws(config, app.db, app.cache)
+    app.message_service = MessageService(config, app.db, app.cache)
+    await app.message_service.init()
 
 
 @app.listener('after_server_stop')

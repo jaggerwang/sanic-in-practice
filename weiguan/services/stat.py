@@ -7,7 +7,7 @@ from ..models import UserStatModel, PostStatModel, UserModel, PostModel, \
     PostLikeModel, UserFollowModel
 
 
-class StatService(object):
+class StatService:
     def __init__(self, config, db, cache):
         self.config = config
         self.db = db
