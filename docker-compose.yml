@@ -14,9 +14,9 @@ services:
       WG_MYSQL_PASSWORD: jwcourse.com
       WG_REDIS_URI: redis://@redis:6379/0
     ports:
-      - "8001:8000"
+      - 8001:8000
     volumes:
-      - /data/weiguan/server:/data
+      - ~/data/weiguan-demo/server:/data
   scheduler:
     image: weiguan
     command: python -u -m weiguan.manage schedule run
@@ -32,18 +32,18 @@ services:
       WG_MYSQL_PASSWORD: jwcourse.com
       WG_REDIS_URI: redis://@redis:6379/0
     volumes:
-      - /data/weiguan/scheduler:/data
+      - ~/data/weiguan-demo/scheduler:/data
   mysql:
     image: mysql:5.7
     environment:
       TZ: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: jwcourse.com
     volumes:
-      - /data/weiguan/mysql:/var/lib/mysql
+      - ~/data/weiguan-demo/mysql:/var/lib/mysql
   redis:
     image: redis:5
     environment:
       TZ: Asia/Shanghai
     volumes:
-      - /data/weiguan/redis:/data
+      - ~/data/weiguan-demo/redis:/data
     

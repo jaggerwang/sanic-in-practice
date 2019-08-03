@@ -1,13 +1,13 @@
 # Sanic in Practice
 
-This project is the reference source code of online video course [叽歪课堂 - Python Sanic 高并发服务开发实战](https://blog.jaggerwang.net/python-sanic-high-currency-service-in-practice/), including Sanic web framework usage examples, SQLAlchemy sql toolkit usage examples, and a lite version of [Weiguan](https://weiguan.app/) app's server.
+This project is the reference source code of online video course [叽歪课堂 - Python Sanic 高并发服务开发实战](https://blog.jaggerwang.net/python-sanic-high-currency-service-development/), including Sanic web framework usage examples, SQLAlchemy sql toolkit usage examples, and a lite version of [Weiguan](https://weiguan.app/) app's api server.
 
-## Frameworks and libraries
+## Frameworks and libraries used by this project
 
 1. [Sanic](https://github.com/huge-success/sanic) Asynchronous web framework and server
-1. [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy) SQL toolkit
-1. [AIOMySQL](https://github.com/aio-libs/aiomysql) Asynchronous read from and write to mysql
-1. [AIORedis](https://github.com/aio-libs/aioredis) Asynchronous read from and write to redis
+1. [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy) SQL toolkit and orm framework
+1. [AIOMySQL](https://github.com/aio-libs/aiomysql) Asynchronous access mysql
+1. [AIORedis](https://github.com/aio-libs/aioredis) Asynchronous access redis
 1. [MarshMallow](https://github.com/marshmallow-code/marshmallow/) Object serialization
 1. [Fire](https://github.com/google/python-fire) CLI application framework
 1. [APScheduler](https://github.com/agronholm/apscheduler) Run interval jobs
@@ -76,7 +76,7 @@ Change the content of `docker-compose.yml` as needed, especially the host path o
 docker-compose up
 ```
 
-It will start server, scheduler, mysql and redis services. If you need to stop all services, you can execute command `docker-compose down`.
+It will start server, scheduler, mysql and redis services. If you need to stop and remove all services, you can execute command `docker-compose down`. The server and scheduler services will start failed before creating the project's database, you should run `docker-compose up` again after created the database.
 
 #### Create database and tables
 
@@ -89,7 +89,7 @@ $ mysql -u root -p
 > GRANT ALL PRIVILEGES ON `weiguan`.* TO 'weiguan'@'%' IDENTIFIED BY 'jwcourse.com';
 ```
 
-Second, login to server container and create tables of this project.
+Second, login to server container and create tables for this project.
 
 ```bash
 docker container exec -it sanic-in-practice_server_1 bash

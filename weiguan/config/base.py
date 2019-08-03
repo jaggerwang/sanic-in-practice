@@ -1,29 +1,29 @@
 NAME = 'weiguan'
-# 运行时数据保存路径，比如日志、上传文件等
+# Directory of runtime data, like logs and uploaded files etc
 DATA_PATH = '/tmp'
-# 上传文件子目录
+# Subdirectory of uploaded files
 UPLOAD_DIR = 'uploads'
-# 服务监听地址和端口
+# Listen host and port of server
 HOST = '0.0.0.0'
 PORT = 8000
-# 是否为调试模式
+# Whether in debug mode
 DEBUG = True
-# 是否热加载代码
+# Whether to auto load modified code
 AUTO_RELOAD = True
-# 是否记录访问日志
+# Whether log access record
 ACCESS_LOG = True
-# 工作进程数
+# Number of working processes
 WORKERS = 1
-# 会话有效期
+# Valid seconds of session
 SESSION_EXPIRY = 30 * 24 * 3600
-# 请求体大小限制
+# Max size of request in bytes
 REQUEST_MAX_SIZE = 100 * 1024 * 1024
-# 上传文件大小限制
+# Max allowed size of uploaded file in bytes
 UPLOAD_FILE_MAX_SIZE = 50 * 1024 * 1024
-# 上传文件访问域名
+# Endpoint of uploaded files
 UPLOAD_FILE_URL_BASE = 'http://localhost:8000/files/'
 
-# MySQL连接信息
+# MySQL connection parameters
 MYSQL_HOST = 'localhost'
 MYSQL_PORT = 3306
 MYSQL_DB = 'weiguan_demo'
@@ -33,7 +33,7 @@ MYSQL_TIMEOUT = 1
 MYSQL_POOL_MIN_SIZE = 1
 MYSQL_POOL_MAX_SIZE = 100
 
-# Redis连接信息
+# Redis connection parameters
 REDIS_URI = 'redis://@localhost:6379/0'
 REDIS_TIMEOUT = 1
 REDIS_POOL_MIN_SIZE = 1
