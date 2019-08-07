@@ -1,9 +1,9 @@
 import logging
 import asyncio
 from datetime import datetime, time, timedelta
-import traceback
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.events import EVENT_JOB_ERROR, JobExecutionEvent
 
 from ..services import StatService
 
@@ -32,6 +32,12 @@ class Schedule:
             post_stat = await stat_service.stat_post(post_id)
             print(post_stat)
 
+    def error_listener(self, event):
+        if isinstance(event, JobExecutionEvent):
+            logger.error(repr(event.exception))
+        else:
+            logger.error(repr(event))
+
     def run(self, task=None, *args, **kwargs):
         if task is None:
             scheduler = AsyncIOScheduler()
@@ -39,15 +45,14 @@ class Schedule:
             scheduler.add_job(self.stat_user, 'interval', minutes=1)
             scheduler.add_job(self.stat_post, 'interval', minutes=1)
 
+            scheduler.add_listener(self.error_listener, EVENT_JOB_ERROR)
+
             scheduler.start()
 
             try:
                 asyncio.get_event_loop().run_forever()
             except (KeyboardInterrupt, SystemExit):
                 pass
-            except Exception as e:
-                traceback.print_exc()
-                logger.error(repr(e))
         else:
             method = getattr(self, task)
             asyncio.get_event_loop().run_until_complete(method(*args, **kwargs))
