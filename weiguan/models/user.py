@@ -2,7 +2,8 @@ import sqlalchemy as sa
 import sqlalchemy.sql as sasql
 from marshmallow import Schema, fields
 
-from .common import metadata, LocalDateTime
+from ..utils import LocalDateTime
+from .common import metadata
 
 UserModel = sa.Table(
     'user', metadata,

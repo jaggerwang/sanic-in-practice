@@ -6,7 +6,8 @@ import sqlalchemy.sql as sasql
 from marshmallow import Schema, fields, post_dump
 
 from ..config import config
-from .common import metadata, LocalDateTime
+from ..utils import LocalDateTime
+from .common import metadata
 
 
 class StorageRegion(Enum):
