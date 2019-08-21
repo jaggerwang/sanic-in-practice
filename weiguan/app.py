@@ -8,6 +8,8 @@ from .models import init_db, close_db, init_cache, close_cache
 from .services import MessageService
 from .blueprints import handle_exception, account, message, post, storage, user
 
+os.makedirs(config['DATA_PATH'], 0o755, True)
+
 app = Sanic(config['NAME'].capitalize(), log_config=log_config)
 app.config.update(config)
 

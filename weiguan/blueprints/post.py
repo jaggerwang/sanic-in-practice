@@ -10,9 +10,9 @@ from .common import response_json, ResponseCode, authenticated, dump_post_info, 
 post = Blueprint('post', url_prefix='/post')
 
 
-@post.post('/create')
+@post.post('/publish')
 @authenticated()
-async def create(request):
+async def publish(request):
     user_id = request['session']['user']['id']
 
     data = request.json
@@ -41,19 +41,25 @@ async def delete(request):
     post_service = PostService(
         request.app.config, request.app.db, request.app.cache)
     post = await post_service.info(id)
-    if post is not None:
-        if user_id != post['user_id']:
-            return response_json(ResponseCode.FAIL, '没有权限')
+    if post is None:
+        raise NotFound('')
 
-        await post_service.delete(id)
+    if user_id != post['user_id']:
+        return response_json(ResponseCode.FAIL, '没有权限')
 
-    return response_json()
+    await post_service.delete(id)
+
+    return response_json(post=await dump_post_info(request, post))
 
 
 @post.get('/info')
 @authenticated()
 async def info(request):
-    id = int(request.args.get('id'))
+    user_id = request['session'].get('user', {}).get('id')
+
+    id = request.args.get('id')
+    if id is not None:
+        id = int(id)
 
     post_service = PostService(
         request.app.config, request.app.db, request.app.cache)
@@ -61,7 +67,7 @@ async def info(request):
     if post is None:
         raise NotFound('')
 
-    return response_json(post=await dump_post_info(request, post))
+    return response_json(post=await dump_post_info(request, post, user_id))
 
 
 @post.get('/published')
@@ -78,21 +84,14 @@ async def published(request):
     offset = request.args.get('offset')
     if offset is not None:
         offset = int(offset)
-    before_id = request.args.get('beforeId')
-    if before_id is not None:
-        before_id = int(before_id)
-    after_id = request.args.get('afterId')
-    if after_id is not None:
-        after_id = int(after_id)
 
     post_service = PostService(
         request.app.config, request.app.db, request.app.cache)
     posts, total = await post_service.list_(
-        user_id=user_id, limit=limit, offset=offset, before_id=before_id,
-        after_id=after_id)
+        user_id=user_id, limit=limit, offset=offset)
 
     return response_json(
-        posts=await dump_post_infos(request, posts), total=total)
+        posts=await dump_post_infos(request, posts, user_id), total=total)
 
 
 @post.post('/like')
@@ -139,21 +138,14 @@ async def liked(request):
     offset = request.args.get('offset')
     if offset is not None:
         offset = int(offset)
-    before_id = request.args.get('beforeId')
-    if before_id is not None:
-        before_id = int(before_id)
-    after_id = request.args.get('afterId')
-    if after_id is not None:
-        after_id = int(after_id)
 
     post_service = PostService(
         request.app.config, request.app.db, request.app.cache)
     posts, total = await post_service.liked(
-        user_id=user_id, limit=limit, offset=offset, before_id=before_id,
-        after_id=after_id)
+        user_id=user_id, limit=limit, offset=offset)
 
     return response_json(
-        posts=await dump_post_infos(request, posts), total=total)
+        posts=await dump_post_infos(request, posts, user_id), total=total)
 
 
 @post.get('/following')
@@ -164,9 +156,6 @@ async def following(request):
     limit = request.args.get('limit')
     if limit is not None:
         limit = int(limit)
-    offset = request.args.get('offset')
-    if offset is not None:
-        offset = int(offset)
     before_id = request.args.get('beforeId')
     if before_id is not None:
         before_id = int(before_id)
@@ -177,8 +166,7 @@ async def following(request):
     post_service = PostService(
         request.app.config, request.app.db, request.app.cache)
     posts, total = await post_service.following(
-        user_id=user_id, limit=limit, offset=offset, before_id=before_id,
-        after_id=after_id)
+        user_id=user_id, limit=limit, before_id=before_id, after_id=after_id)
 
     return response_json(
-        posts=await dump_post_infos(request, posts), total=total)
+        posts=await dump_post_infos(request, posts, user_id), total=total)

@@ -1,6 +1,8 @@
+import os
+
 NAME = 'weiguan'
 # Directory of runtime data, like logs and uploaded files etc
-DATA_PATH = '/tmp'
+DATA_PATH = os.path.expanduser('~/data/jaggerwang/flutter-in-practice')
 # Subdirectory of uploaded files
 UPLOAD_DIR = 'uploads'
 # Listen host and port of server
@@ -20,6 +22,8 @@ SESSION_EXPIRY = 30 * 24 * 3600
 REQUEST_MAX_SIZE = 100 * 1024 * 1024
 # Max allowed size of uploaded file in bytes
 UPLOAD_FILE_MAX_SIZE = 50 * 1024 * 1024
+# Max allowed number of uploaded files
+UPLOAD_FILE_MAX_NUMBER = 10
 # Endpoint of uploaded files
 UPLOAD_FILE_URL_BASE = 'http://localhost:8000/files/'
 

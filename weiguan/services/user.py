@@ -161,8 +161,7 @@ class UserService:
                     UserFollowModel.c.follower_id == follower_id,
                     UserFollowModel.c.following_id == following_id)))
 
-    async def followings(self, user_id, limit=None, offset=None,
-                         before_id=None, after_id=None):
+    async def followings(self, user_id, limit=None, offset=None):
         where_clause = UserFollowModel.c.follower_id == user_id
         select_sm = sasql.select([UserModel]).\
             select_from(UserModel.join(
@@ -173,17 +172,12 @@ class UserService:
             select_from(UserFollowModel).\
             where(where_clause)
 
-        select_sm = select_sm.order_by(UserModel.c.id.desc())
+        select_sm = select_sm.order_by(UserFollowModel.c.id.desc())
 
         if limit is not None:
             select_sm = select_sm.limit(limit)
         if offset is not None:
             select_sm = select_sm.offset(offset)
-
-        if before_id is not None:
-            select_sm = select_sm.where(UserModel.c.id < before_id)
-        if after_id is not None:
-            select_sm = select_sm.where(UserModel.c.id > after_id)
 
         async with self.db.acquire() as conn:
             result = await conn.execute(select_sm)
@@ -194,8 +188,7 @@ class UserService:
 
         return (rows, total)
 
-    async def followers(self, user_id, limit=None, offset=None,
-                        before_id=None, after_id=None):
+    async def followers(self, user_id, limit=None, offset=None):
         where_clause = UserFollowModel.c.following_id == user_id
         select_sm = sasql.select([UserModel]).\
             select_from(UserModel.join(
@@ -206,17 +199,12 @@ class UserService:
             select_from(UserFollowModel).\
             where(where_clause)
 
-        select_sm = select_sm.order_by(UserModel.c.id.desc())
+        select_sm = select_sm.order_by(UserFollowModel.c.id.desc())
 
         if limit is not None:
             select_sm = select_sm.limit(limit)
         if offset is not None:
             select_sm = select_sm.offset(offset)
-
-        if before_id is not None:
-            select_sm = select_sm.where(UserModel.c.id < before_id)
-        if after_id is not None:
-            select_sm = select_sm.where(UserModel.c.id > after_id)
 
         async with self.db.acquire() as conn:
             result = await conn.execute(select_sm)
@@ -226,3 +214,19 @@ class UserService:
             total = await result.scalar()
 
         return (rows, total)
+
+    async def is_following_users(self, follower_id, following_ids):
+        valid_ids = [v for v in following_ids if v is not None]
+        if valid_ids:
+            async with self.db.acquire() as conn:
+                result = await conn.execute(
+                    UserFollowModel.select()
+                    .where(sasql.and_(
+                        UserFollowModel.c.follower_id == follower_id,
+                        UserFollowModel.c.following_id.in_(following_ids),
+                    )))
+                d = {v['following_id']: True for v in await result.fetchall()}
+        else:
+            d = {}
+
+        return [d.get(v, False) for v in following_ids]

@@ -18,7 +18,9 @@ async def register(request):
         request.app.config, request.app.db, request.app.cache)
     user = await user_service.create(username=username, password=password)
 
-    return response_json(user=await dump_user_info(request, user))
+    request['session']['user'] = await dump_user_info(request, user)
+
+    return response_json(user=request['session']['user'])
 
 
 @account.post('/login')
@@ -37,18 +39,18 @@ async def login(request):
     else:
         user = None
 
-    if (user is not None and
-            sha256_hash(password, user['salt']) == user['password']):
-        request['session']['user'] = await dump_user_info(request, user)
-
-        return response_json(user=request['session']['user'])
-    else:
+    if (user is None or
+            sha256_hash(password, user['salt']) != user['password']):
         return response_json(ResponseCode.FAIL, '帐号或密码错误')
+
+    request['session']['user'] = await dump_user_info(request, user)
+
+    return response_json(user=request['session']['user'])
 
 
 @account.get('/logout')
 async def logout(request):
-    user = request['session'].pop('user')
+    user = request['session'].pop('user', None)
 
     return response_json(user=user)
 
@@ -102,4 +104,4 @@ async def send_mobile_verify_code(request):
         request.app.config, request.app.db, request.app.cache)
     code = await user_service.send_mobile_verify_code(type, mobile)
 
-    return response_json(verify_code=code)
+    return response_json(verifyCode=code)

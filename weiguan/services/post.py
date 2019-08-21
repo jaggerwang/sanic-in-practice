@@ -52,8 +52,7 @@ class PostService:
 
         return [d.get(v) for v in ids]
 
-    async def list_(self, *, user_id=None, limit=None, offset=None,
-                    before_id=None, after_id=None):
+    async def list_(self, *, user_id=None, limit=None, offset=None):
         select_sm = PostModel.select()
         count_sm = sasql.select([sasql.func.count()]).\
             select_from(PostModel)
@@ -69,11 +68,6 @@ class PostService:
             select_sm = select_sm.limit(limit)
         if offset is not None:
             select_sm = select_sm.offset(offset)
-
-        if before_id is not None:
-            select_sm = select_sm.where(PostModel.c.id < before_id)
-        if after_id is not None:
-            select_sm = select_sm.where(PostModel.c.id > after_id)
 
         async with self.db.acquire() as conn:
             result = await conn.execute(select_sm)
@@ -98,8 +92,7 @@ class PostService:
                     PostLikeModel.c.user_id == user_id,
                     PostLikeModel.c.post_id == post_id)))
 
-    async def liked(self, user_id, limit=None, offset=None,
-                    before_id=None, after_id=None):
+    async def liked(self, user_id, limit=None, offset=None):
         select_sm = sasql.select([PostModel]).\
             select_from(PostModel.join(PostLikeModel)).\
             where(PostLikeModel.c.user_id == user_id)
@@ -114,11 +107,6 @@ class PostService:
         if offset is not None:
             select_sm = select_sm.offset(offset)
 
-        if before_id is not None:
-            select_sm = select_sm.where(PostLikeModel.c.id < before_id)
-        if after_id is not None:
-            select_sm = select_sm.where(PostLikeModel.c.id > after_id)
-
         async with self.db.acquire() as conn:
             result = await conn.execute(select_sm)
             rows = [dict(v) for v in await result.fetchall()]
@@ -128,8 +116,24 @@ class PostService:
 
         return (rows, total)
 
-    async def following(self, user_id, limit=None, offset=None,
-                        before_id=None, after_id=None):
+    async def is_liked_posts(self, user_id, post_ids):
+        valid_ids = [v for v in post_ids if v is not None]
+        if valid_ids:
+            async with self.db.acquire() as conn:
+                result = await conn.execute(
+                    PostLikeModel.select()
+                    .where(sasql.and_(
+                        PostLikeModel.c.user_id == user_id,
+                        PostLikeModel.c.post_id.in_(post_ids),
+                    )))
+                d = {v['post_id']: True for v in await result.fetchall()}
+        else:
+            d = {}
+
+        return [d.get(v, False) for v in post_ids]
+
+    async def following(self, user_id, limit=None, before_id=None,
+                        after_id=None):
         from_clause = PostModel.join(
             UserFollowModel,
             PostModel.c.user_id == UserFollowModel.c.following_id)
@@ -141,12 +145,13 @@ class PostService:
             select_from(from_clause).\
             where(where_clause)
 
-        select_sm = select_sm.order_by(PostModel.c.id.desc())
+        if after_id is not None:
+            select_sm = select_sm.order_by(PostModel.c.id)
+        else:
+            select_sm = select_sm.order_by(PostModel.c.id.desc())
 
         if limit is not None:
             select_sm = select_sm.limit(limit)
-        if offset is not None:
-            select_sm = select_sm.offset(offset)
 
         if before_id is not None:
             select_sm = select_sm.where(PostModel.c.id < before_id)
@@ -159,5 +164,8 @@ class PostService:
 
             result = await conn.execute(count_sm)
             total = await result.scalar()
+
+        if after_id is not None:
+            rows.reverse()
 
         return (rows, total)

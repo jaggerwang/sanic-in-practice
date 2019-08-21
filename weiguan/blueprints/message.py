@@ -1,5 +1,4 @@
 from sanic import Blueprint, response
-from sanic.exceptions import NotFound
 
 from ..models import MessageLevel, NormalMessage, NormalMessageSchema
 from ..services import MessageService

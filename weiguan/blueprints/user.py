@@ -12,7 +12,11 @@ user = Blueprint('user', url_prefix='/user')
 @user.get('/info')
 @authenticated()
 async def info(request):
-    id = int(request.args.get('id'))
+    user_id = request['session']['user']['id']
+
+    id = request.args.get('id')
+    if id is not None:
+        id = int(id)
 
     user_service = UserService(
         request.app.config, request.app.db, request.app.cache)
@@ -20,7 +24,7 @@ async def info(request):
     if user is None:
         raise NotFound('')
 
-    return response_json(user=await dump_user_info(request, user))
+    return response_json(user=await dump_user_info(request, user, user_id))
 
 
 @user.post('/follow')
@@ -67,21 +71,14 @@ async def followings(request):
     offset = request.args.get('offset')
     if offset is not None:
         offset = int(offset)
-    before_id = request.args.get('beforeId')
-    if before_id is not None:
-        before_id = int(before_id)
-    after_id = request.args.get('afterId')
-    if after_id is not None:
-        after_id = int(after_id)
 
     user_service = UserService(
         request.app.config, request.app.db, request.app.cache)
     users, total = await user_service.followings(
-        user_id=user_id, limit=limit, offset=offset, before_id=before_id,
-        after_id=after_id)
+        user_id=user_id, limit=limit, offset=offset)
 
     return response_json(
-        users=await dump_user_infos(request, users), total=total)
+        users=await dump_user_infos(request, users, user_id), total=total)
 
 
 @user.get('/followers')
@@ -98,18 +95,11 @@ async def followers(request):
     offset = request.args.get('offset')
     if offset is not None:
         offset = int(offset)
-    before_id = request.args.get('beforeId')
-    if before_id is not None:
-        before_id = int(before_id)
-    after_id = request.args.get('afterId')
-    if after_id is not None:
-        after_id = int(after_id)
 
     user_service = UserService(
         request.app.config, request.app.db, request.app.cache)
     users, total = await user_service.followers(
-        user_id=user_id, limit=limit, offset=offset, before_id=before_id,
-        after_id=after_id)
+        user_id=user_id, limit=limit, offset=offset)
 
     return response_json(
-        users=await dump_user_infos(request, users), total=total)
+        users=await dump_user_infos(request, users, user_id), total=total)

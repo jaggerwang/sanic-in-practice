@@ -2,7 +2,6 @@ import asyncio
 
 from sanic import Sanic
 from sanic.response import text
-from sanic.exceptions import NotFound, ServerError
 
 app = Sanic()
 

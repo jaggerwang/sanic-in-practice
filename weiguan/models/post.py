@@ -53,7 +53,6 @@ class PostSchema(Schema):
     user = fields.Nested('UserSchema')
     images = fields.Nested('FileSchema', many=True)
     video = fields.Nested('FileSchema')
-    stat = fields.Nested('PostStatSchema')
 
 
 PostLikeModel = sa.Table(

@@ -56,6 +56,7 @@ class FileSchema(Schema):
             'small': '',
             'middle': '',
             'large': '',
+            'huge': '',
         }
         if data['region'] == StorageRegion.LOCAL.value:
             url = '{}{}'.format(config['UPLOAD_FILE_URL_BASE'],
@@ -65,6 +66,7 @@ class FileSchema(Schema):
                     'small': '{}?process={}'.format(url, 'thumb-small'),
                     'middle': '{}?process={}'.format(url, 'thumb-middle'),
                     'large': '{}?process={}'.format(url, 'thumb-large'),
+                    'huge': '{}?process={}'.format(url, 'thumb-huge'),
                 }
 
         return dict(data, url=url, thumbs=thumbs)
