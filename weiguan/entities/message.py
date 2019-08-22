@@ -1,5 +1,5 @@
 from enum import Enum
-import uuid
+from uuid import uuid1
 
 from marshmallow import Schema, fields, post_load
 
@@ -19,7 +19,7 @@ class MessageLevel(Enum):
 
 class Message:
     def __init__(self, type, level):
-        self.id = uuid.uuid4()
+        self.id = uuid1()
         self.type = type
         self.level = level
         self.created_at = local_now()

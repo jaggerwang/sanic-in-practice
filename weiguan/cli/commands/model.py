@@ -1,13 +1,11 @@
 import sqlalchemy as sa
 
-from ..models import metadata
+from ...dependencies import metadata
 
 
-class Model:
-    def __init__(self, config, db, cache):
+class ModelCommand:
+    def __init__(self, config: dict):
         self.config = config
-        self.db = db
-        self.cache = cache
 
         self.engine = sa.create_engine(
             'mysql://{}:{}@{}:{}/{}?charset=utf8mb4'.format(

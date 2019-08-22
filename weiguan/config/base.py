@@ -1,10 +1,5 @@
 import os
 
-NAME = 'weiguan'
-# Directory of runtime data, like logs and uploaded files etc
-DATA_PATH = os.path.expanduser('~/data/jaggerwang/flutter-in-practice')
-# Subdirectory of uploaded files
-UPLOAD_DIR = 'uploads'
 # Listen host and port of server
 HOST = '0.0.0.0'
 PORT = 8000
@@ -16,10 +11,22 @@ AUTO_RELOAD = True
 ACCESS_LOG = True
 # Number of working processes
 WORKERS = 1
-# Valid seconds of session
-SESSION_EXPIRY = 30 * 24 * 3600
 # Max size of request in bytes
 REQUEST_MAX_SIZE = 100 * 1024 * 1024
+
+# App name
+NAME = 'weiguan'
+# Site domain
+DOMAIN = 'localhost:8000'
+# Site base url
+BASE_URL = 'http://localhost:8000'
+# Directory of runtime data, like logs and uploaded files etc
+DATA_PATH = os.path.expanduser('~/data/jaggerwang/flutter-in-practice')
+# Valid seconds of session
+SESSION_EXPIRY = 30 * 24 * 3600
+
+# Subdirectory of uploaded files
+UPLOAD_DIR = 'uploads'
 # Max allowed size of uploaded file in bytes
 UPLOAD_FILE_MAX_SIZE = 50 * 1024 * 1024
 # Max allowed number of uploaded files

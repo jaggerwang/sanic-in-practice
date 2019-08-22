@@ -11,4 +11,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["python", "-u", "-m", "weiguan.app"]
+CMD ["python", "-u", "-m", "weiguan.web.app"]

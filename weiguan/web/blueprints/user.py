@@ -1,8 +1,8 @@
 from sanic import Blueprint
 from sanic.exceptions import NotFound
 
-from ..services import UserService
-from ..models import UserSchema
+from ...container import Container
+from ...entities import UserSchema
 from .common import ResponseCode, response_json, authenticated, dump_user_info, \
     dump_user_infos
 
@@ -14,17 +14,16 @@ user = Blueprint('user', url_prefix='/user')
 async def info(request):
     user_id = request['session']['user']['id']
 
-    id = request.args.get('id')
-    if id is not None:
-        id = int(id)
+    uid = request.args.get('userId')
+    if uid is not None:
+        uid = int(uid)
 
-    user_service = UserService(
-        request.app.config, request.app.db, request.app.cache)
-    user = await user_service.info(id)
+    user_service = Container().user_service
+    user = await user_service.info(uid)
     if user is None:
         raise NotFound('')
 
-    return response_json(user=await dump_user_info(request, user, user_id))
+    return response_json(user=await dump_user_info(user, user_id))
 
 
 @user.post('/follow')
@@ -35,8 +34,7 @@ async def follow(request):
     data = request.json
     following_id = data['followingId']
 
-    user_service = UserService(
-        request.app.config, request.app.db, request.app.cache)
+    user_service = Container().user_service
     await user_service.follow(user_id, following_id)
 
     return response_json()
@@ -50,8 +48,7 @@ async def unfollow(request):
     data = request.json
     following_id = data['followingId']
 
-    user_service = UserService(
-        request.app.config, request.app.db, request.app.cache)
+    user_service = Container().user_service
     await user_service.unfollow(user_id, following_id)
 
     return response_json()
@@ -72,13 +69,12 @@ async def followings(request):
     if offset is not None:
         offset = int(offset)
 
-    user_service = UserService(
-        request.app.config, request.app.db, request.app.cache)
+    user_service = Container().user_service
     users, total = await user_service.followings(
         user_id=user_id, limit=limit, offset=offset)
 
     return response_json(
-        users=await dump_user_infos(request, users, user_id), total=total)
+        users=await dump_user_infos(users, user_id), total=total)
 
 
 @user.get('/followers')
@@ -96,10 +92,9 @@ async def followers(request):
     if offset is not None:
         offset = int(offset)
 
-    user_service = UserService(
-        request.app.config, request.app.db, request.app.cache)
+    user_service = Container().user_service
     users, total = await user_service.followers(
         user_id=user_id, limit=limit, offset=offset)
 
     return response_json(
-        users=await dump_user_infos(request, users, user_id), total=total)
+        users=await dump_user_infos(users, user_id), total=total)

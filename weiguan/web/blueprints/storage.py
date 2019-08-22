@@ -4,9 +4,9 @@ from sanic import Blueprint
 from sanic.exceptions import NotFound
 import aiofiles
 
-from ..utils import random_string
-from ..models import StorageRegion, FileSchema
-from ..services import StorageService
+from ...utils import random_string
+from ...container import Container
+from ...entities import StorageRegion, FileSchema
 from .common import response_json, ResponseCode, authenticated
 
 storage = Blueprint('storage', url_prefix='/storage')
@@ -16,52 +16,49 @@ storage = Blueprint('storage', url_prefix='/storage')
 @authenticated()
 async def upload(request):
     user_id = request['session']['user']['id']
+    config = Container().config
 
     region = request.form.get('region') or StorageRegion.LOCAL.value
     bucket = request.form.get('bucket', '')
     path = request.form.get('path', '')
+    files = request.files.getlist('files', [])
 
-    uploaded_files = []
-    for i in range(request.app.config['UPLOAD_FILE_MAX_NUMBER']):
-        uploaded_file = request.files.get('file{}'.format(i+1))
-        if uploaded_file is None:
-            continue
+    if len(files) > config['UPLOAD_FILE_MAX_NUMBER']:
+        return response_json(
+            ResponseCode.FAIL,
+            '文件数不能超过 {} 个'.format(config['UPLOAD_FILE_MAX_NUMBER']))
 
+    saved_files = []
+    storage_service = Container().storage_service
+    for file in files:
         meta = {
-            'name': uploaded_file.name,
-            'type': uploaded_file.type,
-            'size': len(uploaded_file.body),
+            'name': file.name,
+            'type': file.type,
+            'size': len(file.body),
         }
-        if meta['size'] > request.app.config['UPLOAD_FILE_MAX_SIZE']:
+        if meta['size'] > config['UPLOAD_FILE_MAX_SIZE']:
             return response_json(
                 ResponseCode.FAIL, '文件 {} 大小超过上限'.format(meta['name']))
 
         _, ext = os.path.splitext(meta['name'])
         filename = '{}{}'.format(random_string(16), ext)
 
-        uploaded_files.append((meta, filename, uploaded_file.body))
+        if region == StorageRegion.LOCAL.value:
+            save_dir = os.path.join(
+                config['DATA_PATH'], config['UPLOAD_DIR'], bucket, path)
+            os.makedirs(save_dir, 0o755, True)
 
-    saved_files = []
-    storage_service = StorageService(
-        request.app.config, request.app.db, request.app.cache)
-    if region == StorageRegion.LOCAL.value:
-        save_dir = os.path.join(
-            request.app.config['DATA_PATH'], request.app.config['UPLOAD_DIR'],
-            bucket, path)
-        os.makedirs(save_dir, 0o755, True)
-
-        for (meta, filename, body) in uploaded_files:
             async with aiofiles.open(
                     os.path.join(save_dir, filename), 'wb') as f:
-                await f.write(body)
+                await f.write(file.body)
 
-            file = await storage_service.create_file(
+            saved_file = await storage_service.create_file(
                 user_id=user_id, region=region, bucket=bucket,
                 path=os.path.join(path, filename), meta=meta)
 
-            saved_files.append(file)
-    else:
-        return response_json(ResponseCode.FAIL, '暂不支持该区域')
+            saved_files.append(saved_file)
+        else:
+            return response_json(ResponseCode.FAIL, '暂不支持该区域')
 
     return response_json(
         files=[FileSchema().dump(v) for v in saved_files])
@@ -74,8 +71,7 @@ async def file_info(request):
     if id is not None:
         id = int(id)
 
-    storage_service = StorageService(
-        request.app.config, request.app.db, request.app.cache)
+    storage_service = Container().storage_service
     file = await storage_service.file_info(id)
     if file is None:
         raise NotFound('')

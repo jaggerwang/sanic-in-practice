@@ -1,11 +1,11 @@
 import sqlalchemy as sa
 import sqlalchemy.sql as sasql
-from marshmallow import Schema, fields
+from aiomysql.sa import Engine
 
-from ..utils import LocalDateTime
-from .common import metadata
+from ...utils import LocalDateTime
+from .common import metadata, Repository
 
-UserModel = sa.Table(
+user_table = sa.Table(
     'user', metadata,
     sa.Column('id', sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
@@ -32,20 +32,12 @@ UserModel = sa.Table(
 )
 
 
-class UserSchema(Schema):
-    id = fields.Integer()
-    username = fields.String()
-    mobile = fields.String()
-    email = fields.String()
-    avatarId = fields.Integer(attribute='avatar_id')
-    intro = fields.String()
-    createdAt = fields.DateTime(attribute='created_at')
-    updatedAt = fields.DateTime(attribute='updated_at')
-
-    avatar = fields.Nested('FileSchema')
+class UserRepo(Repository):
+    def __init__(self, db: Engine):
+        super().__init__(db, user_table)
 
 
-UserFollowModel = sa.Table(
+user_follow_table = sa.Table(
     'user_follow', metadata,
     sa.Column("id", sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
@@ -68,3 +60,8 @@ UserFollowModel = sa.Table(
                             onupdate='CASCADE'),
     comment='用户关注',
 )
+
+
+class UserFollowRepo(Repository):
+    def __init__(self, db: Engine):
+        super().__init__(db, user_follow_table)

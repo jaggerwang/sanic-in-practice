@@ -1,13 +1,11 @@
-from enum import Enum
-
 import sqlalchemy as sa
 import sqlalchemy.sql as sasql
-from marshmallow import Schema, fields
+from aiomysql.sa import Engine
 
-from ..utils import LocalDateTime
-from .common import metadata
+from ...utils import LocalDateTime
+from .common import metadata, Repository
 
-UserStatModel = sa.Table(
+user_stat_table = sa.Table(
     'user_stat', metadata,
     sa.Column("id", sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
@@ -34,20 +32,12 @@ UserStatModel = sa.Table(
 )
 
 
-class UserStatSchema(Schema):
-    id = fields.Integer()
-    userId = fields.Integer(attribute='user_id')
-    postCount = fields.Integer(attribute='post_count')
-    likeCount = fields.Integer(attribute='like_count')
-    followingCount = fields.Integer(attribute='following_count')
-    followerCount = fields.Integer(attribute='follower_count')
-    createdAt = fields.DateTime(attribute='created_at')
-    updatedAt = fields.DateTime(attribute='updated_at')
-
-    user = fields.Nested('UserSchema')
+class UserStatRepo(Repository):
+    def __init__(self, db: Engine):
+        super().__init__(db, user_stat_table)
 
 
-PostStatModel = sa.Table(
+post_stat_table = sa.Table(
     'post_stat', metadata,
     sa.Column("id", sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
@@ -68,11 +58,6 @@ PostStatModel = sa.Table(
 )
 
 
-class PostStatSchema(Schema):
-    id = fields.Integer()
-    postId = fields.Integer(attribute='post_id')
-    likeCount = fields.Integer(attribute='like_count')
-    createdAt = fields.DateTime(attribute='created_at')
-    updatedAt = fields.DateTime(attribute='updated_at')
-
-    post = fields.Nested('PostSchema')
+class PostStatRepo(Repository):
+    def __init__(self, db: Engine):
+        super().__init__(db, post_stat_table)

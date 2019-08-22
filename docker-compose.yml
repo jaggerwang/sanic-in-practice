@@ -19,7 +19,7 @@ services:
       - ~/data/weiguan-demo/server:/data
   scheduler:
     image: weiguan
-    command: python -u -m weiguan.manage schedule run
+    command: python -u -m weiguan.cli.app schedule run
     environment:
       TZ: Asia/Shanghai
       WG_DATA_PATH: /data

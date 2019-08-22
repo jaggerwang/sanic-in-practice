@@ -6,9 +6,9 @@ from sanic import response
 from sanic.exceptions import SanicException, Unauthorized
 from pymysql.err import IntegrityError
 
-from ..models import PostSchema, UserSchema, PostStatSchema, UserStatSchema
-from ..services import ServiceException, StorageService, UserService, \
-    StatService, PostService
+from ...container import Container
+from ...entities import PostSchema, UserSchema, PostStatSchema, UserStatSchema
+from ...services import ServiceException
 
 
 class ResponseCode(Enum):
@@ -23,10 +23,11 @@ def response_json(code=ResponseCode.OK, message='', status=200, **data):
 
 
 def handle_exception(request, e):
+    traceback.print_exc()
+
     code = ResponseCode.FAIL
     message = repr(e)
     status = 500
-
     if isinstance(e, SanicException):
         status = e.status_code
     elif isinstance(e, IntegrityError):
@@ -39,8 +40,8 @@ def handle_exception(request, e):
         status = 200
 
     data = {}
-    if request.app.config['DEBUG']:
-        traceback.print_exc()
+    config = Container().config
+    if config['DEBUG']:
         data['exception'] = traceback.format_exc()
 
     return response_json(code, message, status, **data)
@@ -60,46 +61,41 @@ def authenticated():
     return decorator
 
 
-async def dump_user_info(request, user, user_id=None):
+async def dump_user_info(user, user_id=None):
     if user is None:
         return None
 
-    storage_service = StorageService(
-        request.app.config, request.app.db, request.app.cache)
+    storage_service = Container().storage_service
     user['avatar'] = await storage_service.file_info(user['avatar_id'])
 
     user = UserSchema().dump(user)
 
-    stat_service = StatService(
-        request.app.config, request.app.db, request.app.cache)
+    stat_service = Container().stat_service
     stat = await stat_service.user_stat_info_by_user_id(user['id'])
     if stat is not None:
         stat = UserStatSchema().dump(stat)
     user['stat'] = stat
 
     if user_id is not None:
-        user_service = UserService(
-            request.app.config, request.app.db, request.app.cache)
+        user_service = Container().user_service
         user['isFollowing'] = (await user_service.is_following_users(
             user_id, [user['id']]))[0]
 
     return user
 
 
-async def dump_user_infos(request, users, user_id=None):
+async def dump_user_infos(users, user_id=None):
     if not users:
         return []
 
-    storage_service = StorageService(
-        request.app.config, request.app.db, request.app.cache)
+    storage_service = Container().storage_service
     files = await storage_service.file_infos([v['avatar_id'] for v in users])
     for user, file in zip(users, files):
         user['avatar'] = file
 
     users = [UserSchema().dump(v) for v in users]
 
-    stat_service = StatService(
-        request.app.config, request.app.db, request.app.cache)
+    stat_service = Container().stat_service
     stats = await stat_service.user_stat_infos_by_user_ids(
         [v['id'] for v in users])
     for user, stat in zip(users, stats):
@@ -108,8 +104,7 @@ async def dump_user_infos(request, users, user_id=None):
         user['stat'] = stat
 
     if user_id is not None:
-        user_service = UserService(
-            request.app.config, request.app.db, request.app.cache)
+        user_service = Container().user_service
         is_followginss = await user_service.is_following_users(
             user_id, [v['id'] for v in users])
         for user, is_followgins in zip(users, is_followginss):
@@ -118,16 +113,14 @@ async def dump_user_infos(request, users, user_id=None):
     return users
 
 
-async def dump_post_info(request, post, user_id=None):
+async def dump_post_info(post, user_id=None):
     if post is None:
         return None
 
-    user_service = UserService(
-        request.app.config, request.app.db, request.app.cache)
+    user_service = Container().user_service
     user = await user_service.info(post['user_id'])
 
-    storage_service = StorageService(
-        request.app.config, request.app.db, request.app.cache)
+    storage_service = Container().storage_service
     user['avatar'] = await storage_service.file_info(user['avatar_id'])
 
     post['user'] = user
@@ -139,32 +132,28 @@ async def dump_post_info(request, post, user_id=None):
 
     post = PostSchema().dump(post)
 
-    stat_service = StatService(
-        request.app.config, request.app.db, request.app.cache)
+    stat_service = Container().stat_service
     stat = await stat_service.post_stat_info_by_post_id(post['id'])
     if stat is not None:
         stat = PostStatSchema().dump(stat)
     post['stat'] = stat
 
     if user_id is not None:
-        post_service = PostService(
-            request.app.config, request.app.db, request.app.cache)
+        post_service = Container().post_service
         post['isLiked'] = (await post_service.is_liked_posts(
             user_id, [post['id']]))[0]
 
     return post
 
 
-async def dump_post_infos(request, posts, user_id=None):
+async def dump_post_infos(posts, user_id=None):
     if not posts:
         return []
 
-    user_service = UserService(
-        request.app.config, request.app.db, request.app.cache)
+    user_service = Container().user_service
     users = await user_service.infos([v['user_id'] for v in posts])
 
-    storage_service = StorageService(
-        request.app.config, request.app.db, request.app.cache)
+    storage_service = Container().storage_service
     files = await storage_service.file_infos([v['avatar_id'] for v in users])
     for user, file in zip(users, files):
         user['avatar'] = file
@@ -188,8 +177,7 @@ async def dump_post_infos(request, posts, user_id=None):
 
     posts = [PostSchema().dump(v) for v in posts]
 
-    stat_service = StatService(
-        request.app.config, request.app.db, request.app.cache)
+    stat_service = Container().stat_service
     stats = await stat_service.post_stat_infos_by_post_ids(
         [v['id'] for v in posts])
     for post, stat in zip(posts, stats):
@@ -198,8 +186,7 @@ async def dump_post_infos(request, posts, user_id=None):
         post['stat'] = stat
 
     if user_id is not None:
-        post_service = PostService(
-            request.app.config, request.app.db, request.app.cache)
+        post_service = Container().post_service
         is_likeds = await post_service.is_liked_posts(
             user_id, [v['id'] for v in posts])
         for post, is_liked in zip(posts, is_likeds):

@@ -3,114 +3,104 @@ import string
 import sqlalchemy.sql as sasql
 
 from ..utils import random_string, sha256_hash
-from ..models import UserModel, UserFollowModel
+from ..dependencies import UserRepo, UserFollowRepo
 
 
 class UserService:
-    mobile_verify_codes = {}
-    email_verify_codes = {}
+    _mobile_verify_codes = {}
+    _email_verify_codes = {}
 
-    def __init__(self, config, db, cache):
+    def __init__(self, config: dict, user_repo: UserRepo,
+                 user_follow_repo: UserFollowRepo):
         self.config = config
-        self.db = db
-        self.cache = cache
+        self.user_repo = user_repo
+        self.user_follow_repo = user_follow_repo
 
-    async def create(self, **data):
+    async def create_user(self, **data):
         data['salt'] = random_string(64)
         data['password'] = sha256_hash(data['password'], data['salt'])
 
-        async with self.db.acquire() as conn:
-            result = await conn.execute(sasql.insert(UserModel).values(**data))
-            id = result.lastrowid
+        return await self.user_repo.create(**data)
 
-        return await self.info(id)
-
-    async def edit(self, id, **data):
-        data = {k: v for k, v in data.items() if v is not None}
-
-        if 'password' in data:
+    async def modify_user(self, id, **data):
+        if data.get('password') is not None:
             user = self.info(id)
             data['password'] = sha256_hash(data['password'], user['salt'])
 
-        async with self.db.acquire() as conn:
-            await conn.execute(
-                sasql.update(UserModel).where(UserModel.c.id == id).
-                values(**data))
-
-        return await self.info(id)
+        return await self.user_repo.modify(id, **data)
 
     async def info(self, id):
-        if id is None:
-            return None
-
-        async with self.db.acquire() as conn:
-            result = await conn.execute(
-                UserModel.select().where(UserModel.c.id == id))
-            row = await result.first()
-
-        return None if row is None else dict(row)
+        return await self.user_repo.info(id)
 
     async def info_by_username(self, username):
-        if username is None:
-            return None
-
-        async with self.db.acquire() as conn:
-            result = await conn.execute(
-                UserModel.select().where(UserModel.c.username == username))
-            row = await result.first()
-
-        return None if row is None else dict(row)
+        return await self.user_repo.info(username, 'username')
 
     async def info_by_mobile(self, mobile):
-        if mobile is None:
-            return None
-
-        async with self.db.acquire() as conn:
-            result = await conn.execute(
-                UserModel.select().where(UserModel.c.mobile == mobile))
-            row = await result.first()
-
-        return None if row is None else dict(row)
+        return await self.user_repo.info(mobile, 'mobile')
 
     async def infos(self, ids):
-        valid_ids = [v for v in ids if v is not None]
+        return await self.user_repo.infos(ids)
+
+    async def list(self, *, limit=None, offset=None):
+        return await self.user_repo.list(limit=limit, offset=offset)
+
+    async def follow(self, follower_id, following_id):
+        return await self.user_follow_repo.create(
+            follower_id=follower_id, following_id=following_id)
+
+    async def unfollow(self, follower_id, following_id):
+        await self.user_follow_repo.execute(
+            sasql.delete(self.user_follow_repo.table).
+            where(sasql.and_(
+                self.user_follow_repo.table.c.follower_id == follower_id,
+                self.user_follow_repo.table.c.following_id == following_id)))
+
+    async def followings(self, user_id, limit=None, offset=None):
+        from_ = self.user_repo.table.join(
+            self.user_follow_repo.table,
+            self.user_follow_repo.table.c.following_id == self.user_repo.table.c.id)
+
+        where = self.user_follow_repo.table.c.follower_id == user_id
+
+        order_by = self.user_follow_repo.table.c.id.desc()
+
+        return await self.user_repo.list(
+            from_=from_, where=where, order_by=order_by, limit=limit,
+            offset=offset)
+
+    async def followers(self, user_id, limit=None, offset=None):
+        from_ = self.user_repo.table.join(
+            self.user_follow_repo.table,
+            self.user_follow_repo.table.c.follower_id == self.user_repo.table.c.id)
+
+        where = self.user_follow_repo.table.c.following_id == user_id
+
+        order_by = self.user_follow_repo.table.c.id.desc()
+
+        return await self.user_repo.list(
+            from_=from_, where=where, order_by=order_by, limit=limit,
+            offset=offset)
+
+    async def is_following_users(self, follower_id, following_ids):
+        valid_ids = [v for v in following_ids if v is not None]
         if valid_ids:
-            async with self.db.acquire() as conn:
-                result = await conn.execute(
-                    UserModel.select().where(UserModel.c.id.in_(valid_ids)))
-                d = {v['id']: dict(v) for v in await result.fetchall()}
+            result = await self.user_follow_repo.execute(
+                self.user_follow_repo.table.select()
+                .where(sasql.and_(
+                    self.user_follow_repo.table.c.follower_id == follower_id,
+                    self.user_follow_repo.table.c.following_id.in_(following_ids))))
+            d = {v['following_id']: True for v in await result.fetchall()}
         else:
             d = {}
 
-        return [d.get(v) for v in ids]
-
-    async def list_(self, *, limit=None, offset=None):
-        select_sm = UserModel.select()
-        count_sm = sasql.select([sasql.func.count()]).\
-            select_from(UserModel)
-
-        select_sm = select_sm.order_by(UserModel.c.id.desc())
-
-        if limit is not None:
-            select_sm = select_sm.limit(limit)
-        if offset is not None:
-            select_sm = select_sm.offset(offset)
-
-        async with self.db.acquire() as conn:
-            result = await conn.execute(select_sm)
-            rows = [dict(v) for v in await result.fetchall()]
-
-            result = await conn.execute(count_sm)
-            total = await result.scalar()
-
-        return (rows, total)
+        return [d.get(v, False) for v in following_ids]
 
     async def send_mobile_verify_code(self, type, mobile):
         key = '{}_{}'.format(type, mobile)
-        code = self.mobile_verify_codes.get(key)
+        code = self._mobile_verify_codes.get(key)
         if code is None:
             code = random_string(6, string.digits)
-            self.mobile_verify_codes[key] = code
+            self._mobile_verify_codes[key] = code
 
             # TODO 调用第三方 API 发送验证码短信
 
@@ -118,20 +108,20 @@ class UserService:
 
     async def check_mobile_verify_code(self, type, mobile, code):
         key = '{}_{}'.format(type, mobile)
-        sended = self.mobile_verify_codes.get(key)
+        sended = self._mobile_verify_codes.get(key)
         if sended is None or sended != code:
             return False
 
-        del self.mobile_verify_codes[key]
+        del self._mobile_verify_codes[key]
 
         return True
 
     async def send_email_verify_code(self, type, email):
         key = '{}_{}'.format(type, email)
-        code = self.email_verify_codes.get(key)
+        code = self._email_verify_codes.get(key)
         if code is None:
             code = random_string(6, string.digits)
-            self.email_verify_codes[key] = code
+            self._email_verify_codes[key] = code
 
             # TODO 调用第三方 API 发送验证码邮件
 
@@ -139,94 +129,10 @@ class UserService:
 
     async def check_email_verify_code(self, type, email, code):
         key = '{}_{}'.format(type, email)
-        sended = self.email_verify_codes.get(key)
+        sended = self._email_verify_codes.get(key)
         if sended is None or sended != code:
             return False
 
-        del self.email_verify_codes[key]
+        del self._email_verify_codes[key]
 
         return True
-
-    async def follow(self, follower_id, following_id):
-        async with self.db.acquire() as conn:
-            await conn.execute(
-                sasql.insert(UserFollowModel).
-                values(follower_id=follower_id, following_id=following_id))
-
-    async def unfollow(self, follower_id, following_id):
-        async with self.db.acquire() as conn:
-            await conn.execute(
-                sasql.delete(UserFollowModel).
-                where(sasql.and_(
-                    UserFollowModel.c.follower_id == follower_id,
-                    UserFollowModel.c.following_id == following_id)))
-
-    async def followings(self, user_id, limit=None, offset=None):
-        where_clause = UserFollowModel.c.follower_id == user_id
-        select_sm = sasql.select([UserModel]).\
-            select_from(UserModel.join(
-                UserFollowModel,
-                UserFollowModel.c.following_id == UserModel.c.id)).\
-            where(where_clause)
-        count_sm = sasql.select([sasql.func.count()]).\
-            select_from(UserFollowModel).\
-            where(where_clause)
-
-        select_sm = select_sm.order_by(UserFollowModel.c.id.desc())
-
-        if limit is not None:
-            select_sm = select_sm.limit(limit)
-        if offset is not None:
-            select_sm = select_sm.offset(offset)
-
-        async with self.db.acquire() as conn:
-            result = await conn.execute(select_sm)
-            rows = [dict(v) for v in await result.fetchall()]
-
-            result = await conn.execute(count_sm)
-            total = await result.scalar()
-
-        return (rows, total)
-
-    async def followers(self, user_id, limit=None, offset=None):
-        where_clause = UserFollowModel.c.following_id == user_id
-        select_sm = sasql.select([UserModel]).\
-            select_from(UserModel.join(
-                UserFollowModel,
-                UserFollowModel.c.follower_id == UserModel.c.id)).\
-            where(where_clause)
-        count_sm = sasql.select([sasql.func.count()]).\
-            select_from(UserFollowModel).\
-            where(where_clause)
-
-        select_sm = select_sm.order_by(UserFollowModel.c.id.desc())
-
-        if limit is not None:
-            select_sm = select_sm.limit(limit)
-        if offset is not None:
-            select_sm = select_sm.offset(offset)
-
-        async with self.db.acquire() as conn:
-            result = await conn.execute(select_sm)
-            rows = [dict(v) for v in await result.fetchall()]
-
-            result = await conn.execute(count_sm)
-            total = await result.scalar()
-
-        return (rows, total)
-
-    async def is_following_users(self, follower_id, following_ids):
-        valid_ids = [v for v in following_ids if v is not None]
-        if valid_ids:
-            async with self.db.acquire() as conn:
-                result = await conn.execute(
-                    UserFollowModel.select()
-                    .where(sasql.and_(
-                        UserFollowModel.c.follower_id == follower_id,
-                        UserFollowModel.c.following_id.in_(following_ids),
-                    )))
-                d = {v['following_id']: True for v in await result.fetchall()}
-        else:
-            d = {}
-
-        return [d.get(v, False) for v in following_ids]

@@ -1,9 +1,9 @@
 from sanic import Blueprint
 from sanic.exceptions import NotFound
 
-from ..utils import sha256_hash
-from ..models import PostSchema
-from ..services import PostService
+from ...utils import sha256_hash
+from ...container import Container
+from ...entities import PostSchema
 from .common import response_json, ResponseCode, authenticated, dump_post_info, \
     dump_post_infos
 
@@ -21,13 +21,12 @@ async def publish(request):
     image_ids = data.get('imageIds')
     video_id = data.get('videoId')
 
-    post_service = PostService(
-        request.app.config, request.app.db, request.app.cache)
-    post = await post_service.create(
+    post_service = Container().post_service
+    post = await post_service.create_post(
         user_id=user_id, type=type, text=text, image_ids=image_ids,
         video_id=video_id)
 
-    return response_json(post=await dump_post_info(request, post))
+    return response_json(post=await dump_post_info(post))
 
 
 @post.post('/delete')
@@ -36,20 +35,19 @@ async def delete(request):
     user_id = request['session']['user']['id']
 
     data = request.json
-    id = data['id']
+    post_id = data['postId']
 
-    post_service = PostService(
-        request.app.config, request.app.db, request.app.cache)
-    post = await post_service.info(id)
+    post_service = Container().post_service
+    post = await post_service.info(post_id)
     if post is None:
         raise NotFound('')
 
     if user_id != post['user_id']:
         return response_json(ResponseCode.FAIL, '没有权限')
 
-    await post_service.delete(id)
+    await post_service.delete_post(post_id)
 
-    return response_json(post=await dump_post_info(request, post))
+    return response_json(post=await dump_post_info(post))
 
 
 @post.get('/info')
@@ -57,17 +55,16 @@ async def delete(request):
 async def info(request):
     user_id = request['session'].get('user', {}).get('id')
 
-    id = request.args.get('id')
-    if id is not None:
-        id = int(id)
+    post_id = request.args.get('postId')
+    if post_id is not None:
+        post_id = int(post_id)
 
-    post_service = PostService(
-        request.app.config, request.app.db, request.app.cache)
-    post = await post_service.info(id)
+    post_service = Container().post_service
+    post = await post_service.info(post_id)
     if post is None:
         raise NotFound('')
 
-    return response_json(post=await dump_post_info(request, post, user_id))
+    return response_json(post=await dump_post_info(post, user_id))
 
 
 @post.get('/published')
@@ -85,13 +82,12 @@ async def published(request):
     if offset is not None:
         offset = int(offset)
 
-    post_service = PostService(
-        request.app.config, request.app.db, request.app.cache)
-    posts, total = await post_service.list_(
+    post_service = Container().post_service
+    posts, total = await post_service.list(
         user_id=user_id, limit=limit, offset=offset)
 
     return response_json(
-        posts=await dump_post_infos(request, posts, user_id), total=total)
+        posts=await dump_post_infos(posts, user_id), total=total)
 
 
 @post.post('/like')
@@ -102,8 +98,7 @@ async def like(request):
     data = request.json
     post_id = data['postId']
 
-    post_service = PostService(
-        request.app.config, request.app.db, request.app.cache)
+    post_service = Container().post_service
     await post_service.like(user_id, post_id)
 
     return response_json()
@@ -117,8 +112,7 @@ async def unlike(request):
     data = request.json
     post_id = data['postId']
 
-    post_service = PostService(
-        request.app.config, request.app.db, request.app.cache)
+    post_service = Container().post_service
     await post_service.unlike(user_id, post_id)
 
     return response_json()
@@ -139,13 +133,12 @@ async def liked(request):
     if offset is not None:
         offset = int(offset)
 
-    post_service = PostService(
-        request.app.config, request.app.db, request.app.cache)
+    post_service = Container().post_service
     posts, total = await post_service.liked(
         user_id=user_id, limit=limit, offset=offset)
 
     return response_json(
-        posts=await dump_post_infos(request, posts, user_id), total=total)
+        posts=await dump_post_infos(posts, user_id), total=total)
 
 
 @post.get('/following')
@@ -163,10 +156,9 @@ async def following(request):
     if after_id is not None:
         after_id = int(after_id)
 
-    post_service = PostService(
-        request.app.config, request.app.db, request.app.cache)
+    post_service = Container().post_service
     posts, total = await post_service.following(
         user_id=user_id, limit=limit, before_id=before_id, after_id=after_id)
 
     return response_json(
-        posts=await dump_post_infos(request, posts, user_id), total=total)
+        posts=await dump_post_infos(posts, user_id), total=total)
