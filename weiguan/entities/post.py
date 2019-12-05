@@ -4,9 +4,9 @@ from marshmallow import Schema, fields
 
 
 class PostType(Enum):
-    TEXT = 'text'
-    IMAGE = 'image'
-    VIDEO = 'video'
+    TEXT = 'TEXT'
+    IMAGE = 'IMAGE'
+    VIDEO = 'VIDEO'
 
 
 class PostSchema(Schema):

@@ -1,6 +1,5 @@
-from .account import account
 from .common import handle_exception, authenticated
 from .message import message
 from .post import post
-from .storage import storage
+from .file import file
 from .user import user

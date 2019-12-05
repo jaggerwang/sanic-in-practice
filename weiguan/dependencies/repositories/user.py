@@ -20,9 +20,9 @@ user_table = sa.Table(
     sa.Column('created_at', LocalDateTime, nullable=False,
               server_default=sasql.text('CURRENT_TIMESTAMP'),
               comment='创建时间'),
-    sa.Column('updated_at', LocalDateTime, nullable=False,
+    sa.Column('updated_at', LocalDateTime, nullable=True,
               server_default=sasql.text(
-                  'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+                  'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP'),
               comment='更新时间'),
     sa.Index('idx_username', 'username', unique=True),
     sa.Index('idx_mobile', 'mobile', unique=True),
@@ -39,16 +39,16 @@ class UserRepo(Repository):
 
 user_follow_table = sa.Table(
     'user_follow', metadata,
-    sa.Column("id", sa.Integer, nullable=False, primary_key=True,
+    sa.Column('id', sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
     sa.Column('following_id', sa.Integer, nullable=False, comment='被关注用户 ID'),
     sa.Column('follower_id', sa.Integer, nullable=False, comment='粉丝用户 ID'),
-    sa.Column("created_at", LocalDateTime, nullable=False,
+    sa.Column('created_at', LocalDateTime, nullable=False,
               server_default=sasql.text('CURRENT_TIMESTAMP'),
               comment='创建时间'),
-    sa.Column("updated_at", LocalDateTime, nullable=False,
+    sa.Column('updated_at', LocalDateTime, nullable=True,
               server_default=sasql.text(
-                  'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+                  'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP'),
               comment='更新时间'),
     sa.Index('idx_follower_id_following_id', 'follower_id', 'following_id',
              unique=True),

@@ -2,7 +2,7 @@ from sanic import Blueprint, response
 
 from ...container import Container
 from ...entities import MessageLevel, NormalMessage, NormalMessageSchema
-from .common import ResponseCode, response_json
+from .common import response_json
 
 message = Blueprint('message', url_prefix='/message')
 

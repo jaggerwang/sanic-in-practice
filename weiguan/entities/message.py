@@ -7,14 +7,14 @@ from ..utils import local_now
 
 
 class MessageType(Enum):
-    NORMAL = 'normal'
-    NOTIFY = 'notify'
+    NORMAL = 'NORMAL'
+    NOTIFY = 'NOTIFY'
 
 
 class MessageLevel(Enum):
-    INFO = 'info'
-    SUCCESS = 'success'
-    ERROR = 'error'
+    INFO = 'INFO'
+    SUCCESS = 'SUCCESS'
+    ERROR = 'ERROR'
 
 
 class Message:

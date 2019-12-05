@@ -4,6 +4,7 @@ import sqlalchemy.sql as sasql
 
 from ..utils import random_string, sha256_hash
 from ..dependencies import UserRepo, UserFollowRepo
+from .common import NotFoundException
 
 
 class UserService:
@@ -30,7 +31,9 @@ class UserService:
         return await self.user_repo.modify(id, **data)
 
     async def info(self, id):
-        return await self.user_repo.info(id)
+        user = await self.user_repo.info(id)
+        if user is None:
+            raise NotFoundException('用户未找到')
 
     async def info_by_username(self, username):
         return await self.user_repo.info(username, 'username')
@@ -55,7 +58,7 @@ class UserService:
                 self.user_follow_repo.table.c.follower_id == follower_id,
                 self.user_follow_repo.table.c.following_id == following_id)))
 
-    async def followings(self, user_id, limit=None, offset=None):
+    async def following(self, user_id, limit=None, offset=None):
         from_ = self.user_repo.table.join(
             self.user_follow_repo.table,
             self.user_follow_repo.table.c.following_id == self.user_repo.table.c.id)
@@ -68,7 +71,7 @@ class UserService:
             from_=from_, where=where, order_by=order_by, limit=limit,
             offset=offset)
 
-    async def followers(self, user_id, limit=None, offset=None):
+    async def follower(self, user_id, limit=None, offset=None):
         from_ = self.user_repo.table.join(
             self.user_follow_repo.table,
             self.user_follow_repo.table.c.follower_id == self.user_repo.table.c.id)
@@ -100,9 +103,8 @@ class UserService:
         code = self._mobile_verify_codes.get(key)
         if code is None:
             code = random_string(6, string.digits)
+            # 模拟发送，实际应调用第三方 API 来发送验证码短信
             self._mobile_verify_codes[key] = code
-
-            # TODO 调用第三方 API 发送验证码短信
 
         return code
 

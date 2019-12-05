@@ -7,7 +7,7 @@ from .common import metadata, Repository
 
 user_stat_table = sa.Table(
     'user_stat', metadata,
-    sa.Column("id", sa.Integer, nullable=False, primary_key=True,
+    sa.Column('id', sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
     sa.Column('user_id', sa.Integer, nullable=False, comment='用户 ID'),
     sa.Column('post_count', sa.Integer, nullable=False,
@@ -18,12 +18,12 @@ user_stat_table = sa.Table(
               server_default=sasql.text('0'), comment='关注人数'),
     sa.Column('follower_count', sa.Integer, nullable=False,
               server_default=sasql.text('0'), comment='粉丝人数'),
-    sa.Column("created_at", LocalDateTime, nullable=False,
+    sa.Column('created_at', LocalDateTime, nullable=False,
               server_default=sasql.text('CURRENT_TIMESTAMP'),
               comment='创建时间'),
-    sa.Column("updated_at", LocalDateTime, nullable=False,
+    sa.Column('updated_at', LocalDateTime, nullable=True,
               server_default=sasql.text(
-                  'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+                  'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP'),
               comment='更新时间'),
     sa.Index('idx_user_id', 'user_id', unique=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE',
@@ -39,17 +39,17 @@ class UserStatRepo(Repository):
 
 post_stat_table = sa.Table(
     'post_stat', metadata,
-    sa.Column("id", sa.Integer, nullable=False, primary_key=True,
+    sa.Column('id', sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
     sa.Column('post_id', sa.Integer, nullable=False, comment='动态 ID'),
     sa.Column('like_count', sa.Integer, nullable=False,
               server_default=sasql.text('0'), comment='被喜欢次数'),
-    sa.Column("created_at", LocalDateTime, nullable=False,
+    sa.Column('created_at', LocalDateTime, nullable=False,
               server_default=sasql.text('CURRENT_TIMESTAMP'),
               comment='创建时间'),
-    sa.Column("updated_at", LocalDateTime, nullable=False,
+    sa.Column('updated_at', LocalDateTime, nullable=True,
               server_default=sasql.text(
-                  'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+                  'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP'),
               comment='更新时间'),
     sa.Index('idx_post_id', 'post_id', unique=True),
     sa.ForeignKeyConstraint(['post_id'], ['post.id'], ondelete='CASCADE',

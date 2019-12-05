@@ -1,11 +1,10 @@
 from sanic import Blueprint
-from sanic.exceptions import NotFound
 
 from ...utils import sha256_hash
 from ...container import Container
 from ...entities import PostSchema
-from .common import response_json, ResponseCode, authenticated, dump_post_info, \
-    dump_post_infos
+from ...services import UnauthorizedException
+from .common import response_json, authenticated, dump_post_info, dump_post_infos
 
 post = Blueprint('post', url_prefix='/post')
 
@@ -35,17 +34,15 @@ async def delete(request):
     user_id = request['session']['user']['id']
 
     data = request.json
-    post_id = data['postId']
+    id = data['id']
 
     post_service = Container().post_service
-    post = await post_service.info(post_id)
-    if post is None:
-        raise NotFound('')
+    post = await post_service.info(id)
 
     if user_id != post['user_id']:
-        return response_json(ResponseCode.FAIL, '没有权限')
+        raise UnauthorizedException('无权删除动态')
 
-    await post_service.delete_post(post_id)
+    await post_service.delete_post(id)
 
     return response_json(post=await dump_post_info(post))
 
@@ -55,14 +52,12 @@ async def delete(request):
 async def info(request):
     user_id = request['session'].get('user', {}).get('id')
 
-    post_id = request.args.get('postId')
-    if post_id is not None:
-        post_id = int(post_id)
+    id = request.args.get('id')
+    if id is not None:
+        id = int(id)
 
     post_service = Container().post_service
-    post = await post_service.info(post_id)
-    if post is None:
-        raise NotFound('')
+    post = await post_service.info(id)
 
     return response_json(post=await dump_post_info(post, user_id))
 

@@ -19,13 +19,17 @@ This project is the reference source code of online video course [叽歪课堂 -
 
 | Path  | Method | Description |
 | ------------- | ------------- | ------------- |
-| /account/register | POST | Register account |
-| /account/login | POST | Login account |
-| /account/logout | GET | Logout account |
-| /account/info | GET | Get logined account |
-| /account/modify | POST | Modify logined account |
-| /account/send/mobile/verify/code | POST | Send mobile verify code |
-| /message/ws | Websocket | Create websocket connection for message |
+| /user/register | POST | Register |
+| /user/login | POST | Login |
+| /user/logout | GET | Logout |
+| /user/logged | GET | Get logged user |
+| /user/modify | POST | Modify logged user |
+| /user/info | GET | Get user info |
+| /user/follow | POST | Follow user |
+| /user/unfollow | POST | Unfollow user |
+| /user/following | GET | Following users of someone |
+| /user/follower | GET | Fans of some user |
+| /user/sendMobileVerifyCode | POST | Send mobile verify code |
 | /post/publish | POST | Publish post |
 | /post/delete | POST | Delete post |
 | /post/info | GET | Get post info |
@@ -34,13 +38,9 @@ This project is the reference source code of online video course [叽歪课堂 -
 | /post/unlike | POST | Unlike post |
 | /post/liked | GET | Liked posts of some user |
 | /post/following | GET | Posts of following users of someone |
-| /storage/upload | POST | Upload file |
-| /storage/file/info | GET | Get file meta info |
-| /user/info | GET | Get user info |
-| /user/follow | POST | Follow user |
-| /user/unfollow | POST | Unfollow user |
-| /user/followings | GET | Following users of someone |
-| /user/followers | GET | Fans of some user |
+| /file/upload | POST | Upload file |
+| /file/info | GET | Get file meta info |
+| /message/ws | Websocket | Create websocket connection for message |
 
 ## How to run
 

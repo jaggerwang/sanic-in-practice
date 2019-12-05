@@ -8,7 +8,7 @@ from aioredis import create_redis_pool, Redis
 from .utils import SingletonMeta
 from .dependencies import MessageChannel, PostRepo, PostLikeRepo, UserStatRepo, \
     PostStatRepo, FileRepo, UserRepo, UserFollowRepo
-from .services import MessageService, PostService, StatService, StorageService, \
+from .services import MessageService, PostService, StatService, FileService, \
     UserService
 from .cli.commands import RootCommand, ModelCommand, ScheduleCommand
 
@@ -43,8 +43,8 @@ class _Container(containers.DeclarativeContainer):
         post_stat_repo=post_stat_repo, user_repo=user_repo,
         user_follow_repo=user_follow_repo, post_repo=post_repo,
         post_like_repo=post_like_repo)
-    storage_service = providers.Singleton(
-        StorageService, config=config, file_repo=file_repo)
+    file_service = providers.Singleton(
+        FileService, config=config, file_repo=file_repo)
 
     model_command = providers.Factory(ModelCommand, config=config)
     schedule_command = providers.Factory(
@@ -152,8 +152,8 @@ class Container(metaclass=SingletonMeta):
         return self.container.stat_service()
 
     @property
-    def storage_service(self) -> StorageService:
-        return self.container.storage_service()
+    def file_service(self) -> FileService:
+        return self.container.file_service()
 
     @property
     def model_command(self) -> ModelCommand:

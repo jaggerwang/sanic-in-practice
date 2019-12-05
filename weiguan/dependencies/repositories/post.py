@@ -8,7 +8,7 @@ from .common import metadata, Repository
 
 post_table = sa.Table(
     'post', metadata,
-    sa.Column("id", sa.Integer, nullable=False, primary_key=True,
+    sa.Column('id', sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
     sa.Column('user_id', sa.Integer, nullable=False, comment='发布者 ID'),
     sa.Column('type', sa.VARCHAR(20), nullable=False, comment='类型'),
@@ -16,12 +16,12 @@ post_table = sa.Table(
               comment='文本内容'),
     sa.Column('image_ids', sa.JSON, nullable=True, comment='图片文件 ID 列表'),
     sa.Column('video_id', sa.Integer, nullable=True, comment='视频文件 ID'),
-    sa.Column("created_at", LocalDateTime, nullable=False,
+    sa.Column('created_at', LocalDateTime, nullable=False,
               server_default=sasql.text('CURRENT_TIMESTAMP'),
               comment='创建时间'),
-    sa.Column("updated_at", LocalDateTime, nullable=False,
+    sa.Column('updated_at', LocalDateTime, nullable=True,
               server_default=sasql.text(
-                  'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+                  'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP'),
               comment='更新时间'),
     sa.Index('idx_user_id', 'user_id'),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE',
@@ -39,16 +39,16 @@ class PostRepo(Repository):
 
 post_like_table = sa.Table(
     'post_like', metadata,
-    sa.Column("id", sa.Integer, nullable=False, primary_key=True,
+    sa.Column('id', sa.Integer, nullable=False, primary_key=True,
               comment='ID'),
     sa.Column('post_id', sa.Integer, nullable=False, comment='动态 ID'),
     sa.Column('user_id', sa.Integer, nullable=False, comment='点赞用户 ID'),
-    sa.Column("created_at", LocalDateTime, nullable=False,
+    sa.Column('created_at', LocalDateTime, nullable=False,
               server_default=sasql.text('CURRENT_TIMESTAMP'),
               comment='创建时间'),
-    sa.Column("updated_at", LocalDateTime, nullable=False,
+    sa.Column('updated_at', LocalDateTime, nullable=True,
               server_default=sasql.text(
-                  'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+                  'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP'),
               comment='更新时间'),
     sa.Index('idx_user_id_post_id', 'user_id', 'post_id', unique=True),
     sa.Index('idx_post_id_created_at', 'post_id', 'created_at'),

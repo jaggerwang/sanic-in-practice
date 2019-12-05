@@ -1,23 +1,17 @@
-from enum import Enum
 import traceback
 from functools import wraps
 
 from sanic import response
-from sanic.exceptions import SanicException, Unauthorized
+from sanic.exceptions import SanicException
 from pymysql.err import IntegrityError
 
 from ...container import Container
 from ...entities import PostSchema, UserSchema, PostStatSchema, UserStatSchema
-from ...services import ServiceException
+from ...services import UsecaseException, UnauthenticatedException, \
+    UnauthorizedException, NotFoundException
 
 
-class ResponseCode(Enum):
-    OK = 'ok'
-    FAIL = 'fail'
-    DUPLICATE = 'duplicate'
-
-
-def response_json(code=ResponseCode.OK, message='', status=200, **data):
+def response_json(code='ok', message='', status=200, **data):
     return response.json({'code': code.value, 'message': message, 'data': data},
                          status)
 
@@ -25,19 +19,26 @@ def response_json(code=ResponseCode.OK, message='', status=200, **data):
 def handle_exception(request, e):
     traceback.print_exc()
 
-    code = ResponseCode.FAIL
+    status = 200
+    code = 'fail'
     message = repr(e)
-    status = 500
     if isinstance(e, SanicException):
-        status = e.status_code
-    elif isinstance(e, IntegrityError):
-        code = ResponseCode.DUPLICATE
-        status = 200
-    elif isinstance(e, ServiceException):
+        if e.status_code is not None:
+            status = e.status_code
+    elif isinstance(e, UnauthenticatedException):
+        status = 401
+        code = 'unauthenticated'
         message = e.message
-        if e.code is not None:
-            code = e.code
-        status = 200
+    elif isinstance(e, UnauthorizedException):
+        status = 403
+        code = 'unauthorized'
+        message = e.message
+    elif isinstance(e, NotFoundException):
+        status = 404
+        code = 'not_found'
+        message = e.message
+    elif isinstance(e, UsecaseException):
+        message = e.message
 
     data = {}
     config = Container().config
@@ -52,7 +53,7 @@ def authenticated():
         @wraps(f)
         async def decorated_function(request, *args, **kwargs):
             if request['session'].get('user') is None:
-                raise Unauthorized('Not authenticated')
+                raise UnauthenticatedException('未认证')
 
             return await f(request, *args, **kwargs)
 
@@ -65,8 +66,8 @@ async def dump_user_info(user, user_id=None):
     if user is None:
         return None
 
-    storage_service = Container().storage_service
-    user['avatar'] = await storage_service.file_info(user['avatar_id'])
+    file_service = Container().file_service
+    user['avatar'] = await file_service.file_info(user['avatar_id'])
 
     user = UserSchema().dump(user)
 
@@ -88,8 +89,8 @@ async def dump_user_infos(users, user_id=None):
     if not users:
         return []
 
-    storage_service = Container().storage_service
-    files = await storage_service.file_infos([v['avatar_id'] for v in users])
+    file_service = Container().file_service
+    files = await file_service.file_infos([v['avatar_id'] for v in users])
     for user, file in zip(users, files):
         user['avatar'] = file
 
@@ -120,15 +121,15 @@ async def dump_post_info(post, user_id=None):
     user_service = Container().user_service
     user = await user_service.info(post['user_id'])
 
-    storage_service = Container().storage_service
-    user['avatar'] = await storage_service.file_info(user['avatar_id'])
+    file_service = Container().file_service
+    user['avatar'] = await file_service.file_info(user['avatar_id'])
 
     post['user'] = user
 
     post['image_ids'] = post['image_ids'] or []
-    post['images'] = await storage_service.file_infos(post['image_ids'])
+    post['images'] = await file_service.file_infos(post['image_ids'])
 
-    post['video'] = await storage_service.file_info(post['video_id'])
+    post['video'] = await file_service.file_info(post['video_id'])
 
     post = PostSchema().dump(post)
 
@@ -153,8 +154,8 @@ async def dump_post_infos(posts, user_id=None):
     user_service = Container().user_service
     users = await user_service.infos([v['user_id'] for v in posts])
 
-    storage_service = Container().storage_service
-    files = await storage_service.file_infos([v['avatar_id'] for v in users])
+    file_service = Container().file_service
+    files = await file_service.file_infos([v['avatar_id'] for v in users])
     for user, file in zip(users, files):
         user['avatar'] = file
 
@@ -163,7 +164,7 @@ async def dump_post_infos(posts, user_id=None):
 
     for post in posts:
         post['image_ids'] = post['image_ids'] or []
-    images = await storage_service.file_infos(
+    images = await file_service.file_infos(
         [image_id for post in posts for image_id in post['image_ids']])
     start = 0
     for post in posts:
@@ -171,7 +172,7 @@ async def dump_post_infos(posts, user_id=None):
         post['images'] = images[start:start+length]
         start += length
 
-    files = await storage_service.file_infos([v['video_id'] for v in posts])
+    files = await file_service.file_infos([v['video_id'] for v in posts])
     for post, file in zip(posts, files):
         post['video'] = file
 

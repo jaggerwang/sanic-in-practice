@@ -32,7 +32,7 @@ UPLOAD_FILE_MAX_SIZE = 50 * 1024 * 1024
 # Max allowed number of uploaded files
 UPLOAD_FILE_MAX_NUMBER = 10
 # Endpoint of uploaded files
-UPLOAD_FILE_URL_BASE = 'http://localhost:8000/files/'
+UPLOAD_FILE_URL_BASE = 'http://localhost:8000/files'
 
 # MySQL connection parameters
 MYSQL_HOST = 'localhost'

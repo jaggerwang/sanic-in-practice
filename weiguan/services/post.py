@@ -4,7 +4,7 @@ import sqlalchemy.sql as sasql
 
 from ..entities import PostType
 from ..dependencies import PostRepo, PostLikeRepo, UserFollowRepo
-from .common import ServiceException
+from .common import UsecaseException, NotFoundException
 
 
 class PostService:
@@ -19,7 +19,7 @@ class PostService:
         if ((data['type'] == PostType.TEXT.value and not data['text']) or
             (data['type'] == PostType.IMAGE.value and not data['image_ids']) or
                 (data['type'] == PostType.VIDEO.value and not data['video_id'])):
-            raise ServiceException('内容不能为空')
+            raise UsecaseException('内容不能为空')
 
         return await self.post_repo.create(**data)
 
@@ -27,7 +27,9 @@ class PostService:
         return await self.post_repo.delete(id)
 
     async def info(self, id):
-        return await self.post_repo.info(id)
+        post = await self.post_repo.info(id)
+        if post is None:
+            raise NotFoundException('动态未找到')
 
     async def infos(self, ids):
         return await self.post_repo.infos(ids)

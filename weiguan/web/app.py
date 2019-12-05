@@ -5,7 +5,7 @@ from sanic_session import Session, AIORedisSessionInterface
 
 from ..config import config, log_config
 from ..container import Container
-from .blueprints import handle_exception, account, message, post, storage, user
+from .blueprints import handle_exception, message, post, file, user
 
 os.makedirs(config['DATA_PATH'], 0o755, True)
 
@@ -17,10 +17,9 @@ app.error_handler.add(Exception, handle_exception)
 app.static('/files', os.path.join(config['DATA_PATH'], config['UPLOAD_DIR']),
            stream_large_files=True)
 
-app.blueprint(account)
 app.blueprint(message)
 app.blueprint(post)
-app.blueprint(storage)
+app.blueprint(file)
 app.blueprint(user)
 
 
