@@ -12,7 +12,7 @@ post = Blueprint('post', url_prefix='/post')
 @post.post('/publish')
 @authenticated()
 async def publish(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     data = request.json
     type = data['type']
@@ -22,7 +22,7 @@ async def publish(request):
 
     post_service = Container().post_service
     post = await post_service.create_post(
-        user_id=user_id, type=type, text=text, image_ids=image_ids,
+        user_id=logged_user_id, type=type, text=text, image_ids=image_ids,
         video_id=video_id)
 
     return response_json(post=await dump_post_info(post))
@@ -31,7 +31,7 @@ async def publish(request):
 @post.post('/delete')
 @authenticated()
 async def delete(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     data = request.json
     id = data['id']
@@ -39,7 +39,7 @@ async def delete(request):
     post_service = Container().post_service
     post = await post_service.info(id)
 
-    if user_id != post['user_id']:
+    if logged_user_id != post['user_id']:
         raise UnauthorizedException('无权删除动态')
 
     await post_service.delete_post(id)
@@ -50,7 +50,7 @@ async def delete(request):
 @post.get('/info')
 @authenticated()
 async def info(request):
-    user_id = request['session'].get('user', {}).get('id')
+    logged_user_id = request['session'].get('user', {}).get('id')
 
     id = request.args.get('id')
     if id is not None:
@@ -59,7 +59,7 @@ async def info(request):
     post_service = Container().post_service
     post = await post_service.info(id)
 
-    return response_json(post=await dump_post_info(post, user_id))
+    return response_json(post=await dump_post_info(post, logged_user_id))
 
 
 @post.get('/published')
@@ -88,13 +88,13 @@ async def published(request):
 @post.post('/like')
 @authenticated()
 async def like(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     data = request.json
     post_id = data['postId']
 
     post_service = Container().post_service
-    await post_service.like(user_id, post_id)
+    await post_service.like(logged_user_id, post_id)
 
     return response_json()
 
@@ -102,13 +102,13 @@ async def like(request):
 @post.post('/unlike')
 @authenticated()
 async def unlike(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     data = request.json
     post_id = data['postId']
 
     post_service = Container().post_service
-    await post_service.unlike(user_id, post_id)
+    await post_service.unlike(logged_user_id, post_id)
 
     return response_json()
 
@@ -139,7 +139,7 @@ async def liked(request):
 @post.get('/following')
 @authenticated()
 async def following(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     limit = request.args.get('limit')
     if limit is not None:
@@ -153,7 +153,7 @@ async def following(request):
 
     post_service = Container().post_service
     posts, total = await post_service.following(
-        user_id=user_id, limit=limit, before_id=before_id, after_id=after_id)
+        user_id=logged_user_id, limit=limit, before_id=before_id, after_id=after_id)
 
     return response_json(
-        posts=await dump_post_infos(posts, user_id), total=total)
+        posts=await dump_post_infos(posts, logged_user_id), total=total)

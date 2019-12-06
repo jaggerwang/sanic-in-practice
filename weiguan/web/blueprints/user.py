@@ -64,7 +64,7 @@ async def logout(request):
 @user.post('/modify')
 @authenticated()
 async def modify(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     data = request.json
     username = data.get('username')
@@ -84,7 +84,7 @@ async def modify(request):
         raise UsecaseException('验证码错误')
 
     user = await user_service.modify_user(
-        user_id, username=username, password=password, mobile=mobile,
+        logged_user_id, username=username, password=password, mobile=mobile,
         email=email, avatar_id=avatar_id, intro=intro)
 
     request['session']['user'] = await dump_user_info(user)
@@ -95,7 +95,7 @@ async def modify(request):
 @user.get('/info')
 @authenticated()
 async def info(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     id = request.args.get('id')
     if id is not None:
@@ -104,19 +104,19 @@ async def info(request):
     user_service = Container().user_service
     user = await user_service.info(id)
 
-    return response_json(user=await dump_user_info(user, user_id))
+    return response_json(user=await dump_user_info(user, logged_user_id))
 
 
 @user.post('/follow')
 @authenticated()
 async def follow(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     data = request.json
-    following_id = data['followingId']
+    user_id = data['userId']
 
     user_service = Container().user_service
-    await user_service.follow(user_id, following_id)
+    await user_service.follow(logged_user_id, user_id)
 
     return response_json()
 
@@ -124,13 +124,13 @@ async def follow(request):
 @user.post('/unfollow')
 @authenticated()
 async def unfollow(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
 
     data = request.json
-    following_id = data['followingId']
+    user_id = data['userId']
 
     user_service = Container().user_service
-    await user_service.unfollow(user_id, following_id)
+    await user_service.unfollow(logged_user_id, user_id)
 
     return response_json()
 

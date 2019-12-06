@@ -15,7 +15,7 @@ file = Blueprint('file', url_prefix='/file')
 @file.post('/upload')
 @authenticated()
 async def upload(request):
-    user_id = request['session']['user']['id']
+    logged_user_id = request['session']['user']['id']
     config = Container().config
 
     region = request.form.get('region') or FileRegion.LOCAL.value
@@ -51,7 +51,7 @@ async def upload(request):
                 await f.write(file.body)
 
             saved_file = await file_service.create_file(
-                user_id=user_id, region=region, bucket=bucket,
+                user_id=logged_user_id, region=region, bucket=bucket,
                 path=os.path.join(path, filename), meta=meta)
 
             saved_files.append(saved_file)
