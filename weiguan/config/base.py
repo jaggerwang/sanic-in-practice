@@ -21,7 +21,7 @@ DOMAIN = 'localhost:8000'
 # Site base url
 BASE_URL = 'http://localhost:8000'
 # Directory of runtime data, like logs and uploaded files etc
-DATA_PATH = os.path.expanduser('~/data/jaggerwang/flutter-in-practice')
+DATA_PATH = os.path.expanduser('~/data/jaggerwang/sanic-in-practice')
 # Valid seconds of session
 SESSION_EXPIRY = 30 * 24 * 3600
 
@@ -37,7 +37,7 @@ UPLOAD_FILE_URL_BASE = 'http://localhost:8000/files'
 # MySQL connection parameters
 MYSQL_HOST = 'localhost'
 MYSQL_PORT = 3306
-MYSQL_DB = 'weiguan_demo'
+MYSQL_DB = 'sip'
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = ''
 MYSQL_TIMEOUT = 1

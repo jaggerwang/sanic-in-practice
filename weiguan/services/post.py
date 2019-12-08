@@ -27,9 +27,14 @@ class PostService:
         return await self.post_repo.delete(id)
 
     async def info(self, id):
+        if id is None:
+            return None
+
         post = await self.post_repo.info(id)
         if post is None:
             raise NotFoundException('动态未找到')
+
+        return post
 
     async def infos(self, ids):
         return await self.post_repo.infos(ids)

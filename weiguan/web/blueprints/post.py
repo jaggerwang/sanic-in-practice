@@ -68,11 +68,8 @@ async def published(request):
     user_id = request.args.get('userId')
     if user_id is not None:
         user_id = int(user_id)
-    else:
-        user_id = request['session']['user']['id']
-    limit = request.args.get('limit')
-    if limit is not None:
-        limit = int(limit)
+    limit = request.args.get('limit', '10')
+    limit = int(limit)
     offset = request.args.get('offset')
     if offset is not None:
         offset = int(offset)
@@ -119,11 +116,8 @@ async def liked(request):
     user_id = request.args.get('userId')
     if user_id is not None:
         user_id = int(user_id)
-    else:
-        user_id = request['session']['user']['id']
-    limit = request.args.get('limit')
-    if limit is not None:
-        limit = int(limit)
+    limit = request.args.get('limit', '10')
+    limit = int(limit)
     offset = request.args.get('offset')
     if offset is not None:
         offset = int(offset)
@@ -141,9 +135,8 @@ async def liked(request):
 async def following(request):
     logged_user_id = request['session']['user']['id']
 
-    limit = request.args.get('limit')
-    if limit is not None:
-        limit = int(limit)
+    limit = request.args.get('limit', '10')
+    limit = int(limit)
     before_id = request.args.get('beforeId')
     if before_id is not None:
         before_id = int(before_id)

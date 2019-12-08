@@ -50,7 +50,7 @@ async def upload(request):
                     os.path.join(save_dir, filename), 'wb') as f:
                 await f.write(file.body)
 
-            saved_file = await file_service.create_file(
+            saved_file = await file_service.create(
                 user_id=logged_user_id, region=region, bucket=bucket,
                 path=os.path.join(path, filename), meta=meta)
 
@@ -64,12 +64,12 @@ async def upload(request):
 
 @file.get('/info')
 @authenticated()
-async def file_info(request):
+async def info(request):
     id = request.args.get('id')
     if id is not None:
         id = int(id)
 
     file_service = Container().file_service
-    file = await file_service.file_info(id)
+    file = await file_service.info(id)
 
     return response_json(file=FileSchema().dump(file))

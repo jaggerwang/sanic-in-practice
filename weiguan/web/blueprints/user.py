@@ -67,12 +67,13 @@ async def modify(request):
     logged_user_id = request['session']['user']['id']
 
     data = request.json
-    username = data.get('username')
-    password = data.get('password')
-    mobile = data.get('mobile')
-    email = data.get('email')
-    avatar_id = data.get('avatarId')
-    intro = data.get('intro')
+    user = data['user']
+    username = user.get('username')
+    password = user.get('password')
+    mobile = user.get('mobile')
+    email = user.get('email')
+    avatar_id = user.get('avatarId')
+    intro = user.get('intro')
     code = data.get('code')
 
     user_service = Container().user_service
@@ -141,11 +142,8 @@ async def following(request):
     user_id = request.args.get('userId')
     if user_id is not None:
         user_id = int(user_id)
-    else:
-        user_id = request['session']['user']['id']
-    limit = request.args.get('limit')
-    if limit is not None:
-        limit = int(limit)
+    limit = request.args.get('limit', '20')
+    limit = int(limit)
     offset = request.args.get('offset')
     if offset is not None:
         offset = int(offset)
@@ -164,11 +162,8 @@ async def follower(request):
     user_id = request.args.get('userId')
     if user_id is not None:
         user_id = int(user_id)
-    else:
-        user_id = request['session']['user']['id']
-    limit = request.args.get('limit')
-    if limit is not None:
-        limit = int(limit)
+    limit = request.args.get('limit', '20')
+    limit = int(limit)
     offset = request.args.get('offset')
     if offset is not None:
         offset = int(offset)

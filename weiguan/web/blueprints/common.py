@@ -12,40 +12,33 @@ from ...services import UsecaseException, UnauthenticatedException, \
 
 
 def response_json(code='ok', message='', status=200, **data):
-    return response.json({'code': code.value, 'message': message, 'data': data},
+    return response.json({'code': code, 'message': message, 'data': data},
                          status)
 
 
 def handle_exception(request, e):
-    traceback.print_exc()
-
     status = 200
     code = 'fail'
     message = repr(e)
     if isinstance(e, SanicException):
         if e.status_code is not None:
             status = e.status_code
-    elif isinstance(e, UnauthenticatedException):
-        status = 401
-        code = 'unauthenticated'
-        message = e.message
-    elif isinstance(e, UnauthorizedException):
-        status = 403
-        code = 'unauthorized'
-        message = e.message
-    elif isinstance(e, NotFoundException):
-        status = 404
-        code = 'not_found'
-        message = e.message
+        traceback.print_exc()
     elif isinstance(e, UsecaseException):
         message = e.message
+        if isinstance(e, UnauthenticatedException):
+            status = 401
+            code = 'unauthenticated'
+        elif isinstance(e, UnauthorizedException):
+            status = 403
+            code = 'unauthorized'
+        elif isinstance(e, NotFoundException):
+            status = 404
+            code = 'not_found'
+    else:
+        traceback.print_exc()
 
-    data = {}
-    config = Container().config
-    if config['DEBUG']:
-        data['exception'] = traceback.format_exc()
-
-    return response_json(code, message, status, **data)
+    return response_json(code, message, status)
 
 
 def authenticated():
@@ -67,7 +60,7 @@ async def dump_user_info(user, user_id=None):
         return None
 
     file_service = Container().file_service
-    user['avatar'] = await file_service.file_info(user['avatar_id'])
+    user['avatar'] = await file_service.info(user['avatar_id'])
 
     user = UserSchema().dump(user)
 
@@ -79,7 +72,7 @@ async def dump_user_info(user, user_id=None):
 
     if user_id is not None:
         user_service = Container().user_service
-        user['isFollowing'] = (await user_service.is_following_users(
+        user['following'] = (await user_service.is_following_users(
             user_id, [user['id']]))[0]
 
     return user
@@ -90,7 +83,7 @@ async def dump_user_infos(users, user_id=None):
         return []
 
     file_service = Container().file_service
-    files = await file_service.file_infos([v['avatar_id'] for v in users])
+    files = await file_service.infos([v['avatar_id'] for v in users])
     for user, file in zip(users, files):
         user['avatar'] = file
 
@@ -109,7 +102,7 @@ async def dump_user_infos(users, user_id=None):
         is_followginss = await user_service.is_following_users(
             user_id, [v['id'] for v in users])
         for user, is_followgins in zip(users, is_followginss):
-            user['isFollowing'] = is_followgins
+            user['following'] = is_followgins
 
     return users
 
@@ -122,14 +115,14 @@ async def dump_post_info(post, user_id=None):
     user = await user_service.info(post['user_id'])
 
     file_service = Container().file_service
-    user['avatar'] = await file_service.file_info(user['avatar_id'])
+    user['avatar'] = await file_service.info(user['avatar_id'])
 
     post['user'] = user
 
     post['image_ids'] = post['image_ids'] or []
-    post['images'] = await file_service.file_infos(post['image_ids'])
+    post['images'] = await file_service.infos(post['image_ids'])
 
-    post['video'] = await file_service.file_info(post['video_id'])
+    post['video'] = await file_service.info(post['video_id'])
 
     post = PostSchema().dump(post)
 
@@ -141,7 +134,7 @@ async def dump_post_info(post, user_id=None):
 
     if user_id is not None:
         post_service = Container().post_service
-        post['isLiked'] = (await post_service.is_liked_posts(
+        post['liked'] = (await post_service.is_liked_posts(
             user_id, [post['id']]))[0]
 
     return post
@@ -155,7 +148,7 @@ async def dump_post_infos(posts, user_id=None):
     users = await user_service.infos([v['user_id'] for v in posts])
 
     file_service = Container().file_service
-    files = await file_service.file_infos([v['avatar_id'] for v in users])
+    files = await file_service.infos([v['avatar_id'] for v in users])
     for user, file in zip(users, files):
         user['avatar'] = file
 
@@ -164,7 +157,7 @@ async def dump_post_infos(posts, user_id=None):
 
     for post in posts:
         post['image_ids'] = post['image_ids'] or []
-    images = await file_service.file_infos(
+    images = await file_service.infos(
         [image_id for post in posts for image_id in post['image_ids']])
     start = 0
     for post in posts:
@@ -172,7 +165,7 @@ async def dump_post_infos(posts, user_id=None):
         post['images'] = images[start:start+length]
         start += length
 
-    files = await file_service.file_infos([v['video_id'] for v in posts])
+    files = await file_service.infos([v['video_id'] for v in posts])
     for post, file in zip(posts, files):
         post['video'] = file
 
@@ -191,6 +184,6 @@ async def dump_post_infos(posts, user_id=None):
         is_likeds = await post_service.is_liked_posts(
             user_id, [v['id'] for v in posts])
         for post, is_liked in zip(posts, is_likeds):
-            post['isLiked'] = is_liked
+            post['liked'] = is_liked
 
     return posts

@@ -4,7 +4,7 @@ import sqlalchemy.sql as sasql
 
 from ..utils import random_string, sha256_hash
 from ..dependencies import UserRepo, UserFollowRepo
-from .common import NotFoundException
+from .common import UsecaseException, NotFoundException
 
 
 class UserService:
@@ -18,12 +18,24 @@ class UserService:
         self.user_follow_repo = user_follow_repo
 
     async def create_user(self, **data):
+        if (await self.info_by_username(data['username'])) is not None:
+            raise UsecaseException("用户名重复")
+
         data['salt'] = random_string(64)
         data['password'] = sha256_hash(data['password'], data['salt'])
 
         return await self.user_repo.create(**data)
 
     async def modify_user(self, id, **data):
+        if data.get('username') is not None and (await self.info_by_username(data['username'])) is not None:
+            raise UsecaseException("用户名重复")
+
+        if data.get('mobile') is not None and (await self.info_by_mobile(data['mobile'])) is not None:
+            raise UsecaseException("手机重复")
+
+        if data.get('email') is not None and (await self.info_by_email(data['email'])) is not None:
+            raise UsecaseException("邮箱重复")
+
         if data.get('password') is not None:
             user = self.info(id)
             data['password'] = sha256_hash(data['password'], user['salt'])
@@ -31,15 +43,23 @@ class UserService:
         return await self.user_repo.modify(id, **data)
 
     async def info(self, id):
+        if id is None:
+            return None
+
         user = await self.user_repo.info(id)
         if user is None:
             raise NotFoundException('用户未找到')
+
+        return user
 
     async def info_by_username(self, username):
         return await self.user_repo.info(username, 'username')
 
     async def info_by_mobile(self, mobile):
         return await self.user_repo.info(mobile, 'mobile')
+
+    async def info_by_email(self, email):
+        return await self.user_repo.info(email, 'email')
 
     async def infos(self, ids):
         return await self.user_repo.infos(ids)
