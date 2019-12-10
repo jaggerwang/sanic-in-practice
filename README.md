@@ -64,8 +64,8 @@ You can quit the virtual environment by execute command `deactivate`.
 Install mysql and redis server, and start them. After mysql started, create a database for this project, and an account to access the created database.
 
 ```sql
-CREATE DATABASE `weiguan` DEFAULT CHARACTER SET 'utf8mb4';
-GRANT ALL PRIVILEGES ON `weiguan`.* TO 'weiguan'@'%' IDENTIFIED BY 'jwcourse.com';
+CREATE DATABASE `sip` DEFAULT CHARACTER SET 'utf8mb4';
+GRANT ALL PRIVILEGES ON `sip`.* TO 'sip'@'%' IDENTIFIED BY '123456';
 ```
 
 #### Configure application
@@ -106,17 +106,19 @@ Change the content of `docker-compose.yml` as needed, especially the host path o
 docker-compose up
 ```
 
-It will start server, scheduler, mysql and redis services. If you need to stop and remove all services, you can execute command `docker-compose down`. The server and scheduler services will start failed before creating the project's database, you should run `docker-compose up` again after created the database.
+It will start server, scheduler, mysql and redis services. If you need to stop and remove all services, you can execute command `docker-compose down`. The container port `8000` is mapping to the same port on local host, so the endpoint of api service is same as the local way.
+
+> As the database and tables are not ready, the first run will fail, you can try again after they are created.
 
 #### Create database and tables
 
-First, login to mysql container and create a database for this project. The password of mysql `root` account is `jwcourse.com`.
+First, login to mysql container and create a database for this project. The password of mysql `root` account is `123456`.
 
 ```bash
 $ docker container exec -it sanic-in-practice_mysql_1 bash
 $ mysql -u root -p
-> CREATE DATABASE `weiguan` DEFAULT CHARACTER SET 'utf8mb4';
-> GRANT ALL PRIVILEGES ON `weiguan`.* TO 'weiguan'@'%' IDENTIFIED BY 'jwcourse.com';
+> CREATE DATABASE `sip` DEFAULT CHARACTER SET 'utf8mb4';
+> GRANT ALL PRIVILEGES ON `sip`.* TO 'sip'@'%' IDENTIFIED BY '123456';
 ```
 
 Second, login to server container and create tables for this project.
@@ -125,8 +127,6 @@ Second, login to server container and create tables for this project.
 docker container exec -it sanic-in-practice_server_1 bash
 python -u -m weiguan.cli.app model create-tables
 ```
-
-Then you can access all apis at endpoint `http://localhost:8001/`.
 
 ### Developing in vscode's remote container
 

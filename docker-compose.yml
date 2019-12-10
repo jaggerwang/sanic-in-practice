@@ -1,7 +1,7 @@
 version: '3'
 services:
   server:
-    image: weiguan
+    image: sanic-in-practice
     environment:
       TZ: Asia/Shanghai
       WG_DATA_PATH: /data
@@ -9,16 +9,16 @@ services:
       WG_AUTO_RELOAD: 'false'
       WG_MYSQL_HOST: mysql
       WG_MYSQL_PORT: 3306
-      WG_MYSQL_DB: weiguan
-      WG_MYSQL_USER: weiguan
-      WG_MYSQL_PASSWORD: jwcourse.com
+      WG_MYSQL_DB: sip
+      WG_MYSQL_USER: sip
+      WG_MYSQL_PASSWORD: 123456
       WG_REDIS_URI: redis://@redis:6379/0
     ports:
-      - 8001:8000
+      - 8000:8000
     volumes:
-      - ~/data/weiguan-demo/server:/data
+      - ~/data/sanic-in-practice/server:/data
   scheduler:
-    image: weiguan
+    image: sanic-in-practice
     command: python -u -m weiguan.cli.app schedule run
     environment:
       TZ: Asia/Shanghai
@@ -27,23 +27,23 @@ services:
       WG_AUTO_RELOAD: 'false'
       WG_MYSQL_HOST: mysql
       WG_MYSQL_PORT: 3306
-      WG_MYSQL_DB: weiguan
-      WG_MYSQL_USER: weiguan
-      WG_MYSQL_PASSWORD: jwcourse.com
+      WG_MYSQL_DB: sip
+      WG_MYSQL_USER: sip
+      WG_MYSQL_PASSWORD: 123456
       WG_REDIS_URI: redis://@redis:6379/0
     volumes:
-      - ~/data/weiguan-demo/scheduler:/data
+      - ~/data/sanic-in-practice/scheduler:/data
   mysql:
     image: mysql:5.7
     environment:
       TZ: Asia/Shanghai
-      MYSQL_ROOT_PASSWORD: jwcourse.com
+      MYSQL_ROOT_PASSWORD: 123456
     volumes:
-      - ~/data/weiguan-demo/mysql:/var/lib/mysql
+      - ~/data/sanic-in-practice/mysql:/var/lib/mysql
   redis:
     image: redis:5
     environment:
       TZ: Asia/Shanghai
     volumes:
-      - ~/data/weiguan-demo/redis:/data
+      - ~/data/sanic-in-practice/redis:/data
     

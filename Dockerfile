@@ -9,6 +9,6 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
+VOLUME [ "/data" ]
 EXPOSE 8000
-
 CMD ["python", "-u", "-m", "weiguan.web.app"]
