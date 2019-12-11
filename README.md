@@ -64,8 +64,9 @@ You can quit the virtual environment by execute command `deactivate`.
 Install mysql and redis server, and start them. After mysql started, create a database for this project, and an account to access the created database.
 
 ```sql
-CREATE DATABASE `sip` DEFAULT CHARACTER SET 'utf8mb4';
-GRANT ALL PRIVILEGES ON `sip`.* TO 'sip'@'%' IDENTIFIED BY '123456';
+CREATE DATABASE `sip`;
+CREATE USER 'sip'@'%' IDENTIFIED BY '123456';
+GRANT ALL PRIVILEGES ON `sip`.* TO 'sip'@'%';
 ```
 
 #### Configure application
@@ -90,7 +91,7 @@ python -u -m weiguan.web.app
 python -u -m weiguan.cli.app schedule run
 ```
 
-The api service's endpoint is at `http://localhost:8000/`.
+The api service's endpoint is `http://localhost:8000/`.
 
 ### By docker compose
 
@@ -103,23 +104,23 @@ Change the content of `docker-compose.yml` as needed, especially the host path o
 #### Start all services
 
 ```bash
-docker-compose up
+docker-compose up -d
 ```
 
 It will start server, scheduler, mysql and redis services. If you need to stop and remove all services, you can execute command `docker-compose down`. The container port `8000` is mapping to the same port on local host, so the endpoint of api service is same as the local way.
 
-> As the database and tables are not ready, the first run will fail, you can try again after they are created.
+> As the database are not ready, the first run will fail. You can run `docker-compose up -d` again to restart the failed server after the database are created.
 
 #### Create database and tables
 
 First, login to mysql container and create a database for this project. The password of mysql `root` account is `123456`.
 
 ```bash
-$ docker container exec -it sanic-in-practice_mysql_1 bash
-$ mysql -u root -p
-> CREATE DATABASE `sip` DEFAULT CHARACTER SET 'utf8mb4';
-> GRANT ALL PRIVILEGES ON `sip`.* TO 'sip'@'%' IDENTIFIED BY '123456';
+docker container exec -it sanic-in-practice_mysql_1 bash
+mysql -u root -p
 ```
+
+And then create database and user as previously said.
 
 Second, login to server container and create tables for this project.
 

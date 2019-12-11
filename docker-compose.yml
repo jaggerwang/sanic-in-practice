@@ -17,6 +17,9 @@ services:
       - 8000:8000
     volumes:
       - ~/data/sanic-in-practice/server:/data
+    depends_on:
+      - mysql
+      - redis
   scheduler:
     image: sanic-in-practice
     command: python -u -m weiguan.cli.app schedule run
@@ -33,15 +36,18 @@ services:
       WG_REDIS_URI: redis://@redis:6379/0
     volumes:
       - ~/data/sanic-in-practice/scheduler:/data
+    depends_on:
+      - mysql
+      - redis
   mysql:
-    image: mysql:5.7
+    image: mysql:8.0
     environment:
       TZ: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: 123456
     volumes:
       - ~/data/sanic-in-practice/mysql:/var/lib/mysql
   redis:
-    image: redis:5
+    image: redis:5.0
     environment:
       TZ: Asia/Shanghai
     volumes:
