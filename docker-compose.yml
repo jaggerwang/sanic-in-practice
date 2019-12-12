@@ -44,6 +44,9 @@ services:
     environment:
       TZ: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: sip
+      MYSQL_USER: sip
+      MYSQL_PASSWORD: 123456
     volumes:
       - ~/data/sanic-in-practice/mysql:/var/lib/mysql
   redis:

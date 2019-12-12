@@ -46,7 +46,7 @@ This project is the reference source code of online video course [叽歪课堂 -
 
 This project need python v3.7+.
 
-### By python virtual environment
+### By local environment
 
 #### Prapare python virtual environment
 
@@ -61,7 +61,7 @@ You can quit the virtual environment by execute command `deactivate`.
 
 #### Prepare mysql and redis service
 
-Install mysql and redis server, and start them. After mysql started, create a database for this project, and an account to access the created database.
+Install mysql and redis server, and start them. After mysql started, create a database for this project, and a user to access this database.
 
 ```sql
 CREATE DATABASE `sip`;
@@ -79,13 +79,11 @@ Change configs in `weiguan/config/base.py` as your need, especially mysql, redis
 python -u -m weiguan.cli.app model create-tables
 ```
 
-#### Start server
+#### Start server and scheduler
 
 ```bash
 python -u -m weiguan.web.app
 ```
-
-#### Start scheduler
 
 ```bash
 python -u -m weiguan.cli.app schedule run
@@ -99,7 +97,7 @@ You need install [Docker](https://www.docker.com/) and [Docker Compose](https://
 
 #### Configure compose
 
-Change the content of `docker-compose.yml` as needed, especially the host path of mounted volumes.
+Change the content of `docker-compose.yml` as your need, especially the host path of mounted volumes.
 
 #### Start all services
 
@@ -109,20 +107,11 @@ docker-compose up -d
 
 It will start server, scheduler, mysql and redis services. If you need to stop and remove all services, you can execute command `docker-compose down`. The container port `8000` is mapping to the same port on local host, so the endpoint of api service is same as the local way.
 
-> As the database are not ready, the first run will fail. You can run `docker-compose up -d` again to restart the failed server after the database are created.
+When first start mysql, it will auto create a database `sip` and a use `sip` with password `123446` to access this database. The password of `root` user is also `123456`.
 
-#### Create database and tables
+#### Create tables
 
-First, login to mysql container and create a database for this project. The password of mysql `root` account is `123456`.
-
-```bash
-docker container exec -it sanic-in-practice_mysql_1 bash
-mysql -u root -p
-```
-
-And then create database and user as previously said.
-
-Second, login to server container and create tables for this project.
+Login to server container and create tables as previous.
 
 ```bash
 docker container exec -it sanic-in-practice_server_1 bash
