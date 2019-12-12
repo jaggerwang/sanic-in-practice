@@ -107,7 +107,7 @@ docker-compose up -d
 
 It will start server, scheduler, mysql and redis services. If you need to stop and remove all services, you can execute command `docker-compose down`. The container port `8000` is mapping to the same port on local host, so the endpoint of api service is same as the local way.
 
-When first start mysql, it will auto create a database `sip` and a use `sip` with password `123446` to access this database. The password of `root` user is also `123456`.
+When first start mysql, it will auto create a database `sip` and a user `sip` with password `123446` to access this database. The password of `root` user is also `123456`.
 
 #### Create tables
 
