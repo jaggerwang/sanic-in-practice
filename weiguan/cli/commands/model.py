@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 
-from ...dependencies import metadata
+from ...adapter.repository import metadata
 
 
 class ModelCommand:

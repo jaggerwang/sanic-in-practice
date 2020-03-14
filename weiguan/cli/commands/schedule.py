@@ -5,27 +5,27 @@ from datetime import datetime, time, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.events import EVENT_JOB_ERROR, JobExecutionEvent
 
-from ...services import StatService
+from ...usecase import StatUsecase
 
 
 class ScheduleCommand:
-    def __init__(self, config: dict, logger: Logger, stat_service: StatService):
+    def __init__(self, config: dict, logger: Logger, stat_usecase: StatUsecase):
         self.config = config
         self.logger = logger
-        self.stat_service = stat_service
+        self.stat_usecase = stat_usecase
 
     async def stat_user(self, user_id=None):
         if user_id is None:
-            await self.stat_service.stat_all_users()
+            await self.stat_usecase.stat_all_users()
         else:
-            user_stat = await self.stat_service.stat_user(user_id)
+            user_stat = await self.stat_usecase.stat_user(user_id)
             print(user_stat)
 
     async def stat_post(self, post_id=None):
         if post_id is None:
-            await self.stat_service.stat_all_posts()
+            await self.stat_usecase.stat_all_posts()
         else:
-            post_stat = await self.stat_service.stat_post(post_id)
+            post_stat = await self.stat_usecase.stat_post(post_id)
             print(post_stat)
 
     def error_listener(self, event):

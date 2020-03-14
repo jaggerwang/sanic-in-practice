@@ -82,7 +82,7 @@ python -u -m weiguan.cli.app model create-tables
 #### Start server and scheduler
 
 ```bash
-python -u -m weiguan.web.app
+python -u -m weiguan.api.app
 ```
 
 ```bash

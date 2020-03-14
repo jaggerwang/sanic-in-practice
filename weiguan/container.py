@@ -5,11 +5,11 @@ from dependency_injector import providers, containers
 from aiomysql.sa import create_engine, Engine
 from aioredis import create_redis_pool, Redis
 
-from .utils import SingletonMeta
-from .dependencies import MessageChannel, PostRepo, PostLikeRepo, UserStatRepo, \
+from .util import SingletonMeta
+from .adapter.message import MessageBroker, MessageChannel
+from .adapter.repository import PostRepo, PostLikeRepo, UserStatRepo,\
     PostStatRepo, FileRepo, UserRepo, UserFollowRepo
-from .services import MessageService, PostService, StatService, FileService, \
-    UserService
+from .usecase import PostUsecase, StatUsecase, FileUsecase, UserUsecase
 from .cli.commands import RootCommand, ModelCommand, ScheduleCommand
 
 
@@ -22,6 +22,10 @@ class _Container(containers.DeclarativeContainer):
 
     message_channel = providers.Singleton(
         MessageChannel, config=config, cache=cache)
+
+    message_broker = providers.Singleton(
+        MessageBroker, config=config, channel=message_channel)
+
     post_repo = providers.Singleton(PostRepo, db=db)
     post_like_repo = providers.Singleton(PostLikeRepo, db=db)
     user_stat_repo = providers.Singleton(UserStatRepo, db=db)
@@ -30,26 +34,24 @@ class _Container(containers.DeclarativeContainer):
     user_repo = providers.Singleton(UserRepo, db=db)
     user_follow_repo = providers.Singleton(UserFollowRepo, db=db)
 
-    message_service = providers.Singleton(
-        MessageService, config=config, channel=message_channel)
-    user_service = providers.Singleton(
-        UserService, config=config, user_repo=user_repo,
+    user_usecase = providers.Singleton(
+        UserUsecase, config=config, user_repo=user_repo,
         user_follow_repo=user_follow_repo)
-    post_service = providers.Singleton(
-        PostService, config=config, post_repo=post_repo,
+    post_usecase = providers.Singleton(
+        PostUsecase, config=config, post_repo=post_repo,
         post_like_repo=post_like_repo, user_follow_repo=user_follow_repo)
-    stat_service = providers.Singleton(
-        StatService, config=config, user_stat_repo=user_stat_repo,
+    stat_usecase = providers.Singleton(
+        StatUsecase, config=config, user_stat_repo=user_stat_repo,
         post_stat_repo=post_stat_repo, user_repo=user_repo,
         user_follow_repo=user_follow_repo, post_repo=post_repo,
         post_like_repo=post_like_repo)
-    file_service = providers.Singleton(
-        FileService, config=config, file_repo=file_repo)
+    file_usecase = providers.Singleton(
+        FileUsecase, config=config, file_repo=file_repo)
 
     model_command = providers.Factory(ModelCommand, config=config)
     schedule_command = providers.Factory(
         ScheduleCommand, config=config, logger=app_logger,
-        stat_service=stat_service)
+        stat_usecase=stat_usecase)
     root_command = providers.Factory(
         RootCommand, model=model_command, schedule=schedule_command)
 
@@ -136,24 +138,24 @@ class Container(metaclass=SingletonMeta):
         return self.container.user_follow_repo()
 
     @property
-    def message_service(self) -> MessageService:
-        return self.container.message_service()
+    def message_broker(self) -> MessageBroker:
+        return self.container.message_broker()
 
     @property
-    def user_service(self) -> UserService:
-        return self.container.user_service()
+    def user_usecase(self) -> UserUsecase:
+        return self.container.user_usecase()
 
     @property
-    def post_service(self) -> PostService:
-        return self.container.post_service()
+    def post_usecase(self) -> PostUsecase:
+        return self.container.post_usecase()
 
     @property
-    def stat_service(self) -> StatService:
-        return self.container.stat_service()
+    def stat_usecase(self) -> StatUsecase:
+        return self.container.stat_usecase()
 
     @property
-    def file_service(self) -> FileService:
-        return self.container.file_service()
+    def file_usecase(self) -> FileUsecase:
+        return self.container.file_usecase()
 
     @property
     def model_command(self) -> ModelCommand:
