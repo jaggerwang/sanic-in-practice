@@ -1,6 +1,6 @@
 # Sanic in Practice
 
-This project is the reference source code of online video course [叽歪课堂 - Python Sanic 高并发服务开发实战](https://blog.jaggerwang.net/jwcourse-python-sanic-high-currency-service-develop-in-practice/), including Sanic web framework usage examples, SQLAlchemy sql toolkit usage examples, and a lite version of [Weiguan](https://weiguan.app/) app's api server. The api server developed in this project can be used as the backend service of the mobile client app which is developed in project [Flutter in Practice](https://github.com/jaggerwang/flutter-in-practice).
+This project can be used as a starter for learning python api service development, the api service is developed using Sanic web framework, SQLAlchemy sql toolkit, etc. There is also an article [Python Sanic 高并发服务开发指南](https://blog.jaggerwang.net/python-sanic-high-concurrency-service-develop-tour/) for learning this project.
 
 > To students of course: 最新的实战项目目录结构已按照 [干净架构](https://blog.jaggerwang.net/clean-architecture-in-practice/) 进行了整理，另外还使用了 [IoC 容器](https://blog.jaggerwang.net/simplify-business-objects-management-by-ioc-container/) 来简化业务对象的管理。代码结构调整较大，如想获取之前版本，可查看提交记录。
 
