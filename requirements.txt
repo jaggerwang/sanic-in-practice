@@ -40,7 +40,7 @@ redis==3.3.2
 requests==2.22.0
 requests-async==0.5.0
 rfc3986==1.3.2
-sanic==19.6.2
+sanic==20.12.6
 sanic-session==0.5.6
 six==1.12.0
 SQLAlchemy==1.3.5
